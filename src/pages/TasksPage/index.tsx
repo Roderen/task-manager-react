@@ -96,6 +96,7 @@ const TasksPage = () => {
                                 onToggle={() => handleUpdateTask(task.id, task.completed)}
                                 onDelete={() => handleDeleteTask(task.id)}
                                 onEdit={(id, title) => handleUpdateTitle(id, title)}
+                                createdAt={task.createdAt}
                             />
                         ))
                     ) : (

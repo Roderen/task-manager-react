@@ -10,6 +10,7 @@ import {login} from '@/store/authSlice'
 import {useEffect} from "react";
 import type {RootState} from "@/store/store.ts";
 import {Spinner} from "@/components/ui/spinner.tsx";
+import ProfilePage from "@/pages/ProfilePage";
 
 function App() {
     const getToken = useSelector((state: RootState) => state.auth.isAuthenticated)
@@ -22,11 +23,7 @@ function App() {
         }
     }, [isSuccess])
 
-    if (isLoading) return (
-        <div className="flex flex-col items-center justify-center">
-            <Spinner className="size-10"/>
-        </div>
-    )
+    if (isLoading) return <Spinner/>
 
     return (
         <>
@@ -39,8 +36,9 @@ function App() {
                         getToken ? <Navigate to="/tasks" replace/> : <RegisterPage/>
                     }/>
 
-                    <Route element={<ProtectedRoute isAuthenticated={getToken}/>}>
+                    <Route element={<ProtectedRoute isAuthenticated={getToken || isSuccess}/>}>
                         <Route path="/tasks" element={<TasksPage/>}/>
+                        <Route path="/profile" element={<ProfilePage/>} />
                     </Route>
 
                     <Route path="*" element={<Navigate to="/login" replace/>}/>

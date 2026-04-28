@@ -2,15 +2,16 @@ import {Check, Pencil} from "lucide-react";
 import {useState} from "react";
 
 type TaskItemProps = {
-    id: number
-    title: string
-    completed: boolean
-    onToggle: (id: number, completed: boolean) => void
-    onDelete: (id: number) => void
-    onEdit: (id: number, title: string) => Promise<void>
+    id: number,
+    title: string,
+    completed: boolean,
+    onToggle: (id: number, completed: boolean) => void,
+    onDelete: (id: number) => void,
+    onEdit: (id: number, title: string) => Promise<void>,
+    createdAt: Date
 }
 
-const TaskItem = ({id, title, completed, onToggle, onDelete, onEdit}: TaskItemProps) => {
+const TaskItem = ({id, title, completed, onToggle, onDelete, onEdit, createdAt}: TaskItemProps) => {
     const [isEditing, setIsEditing] = useState<boolean>(false)
     const [editTitle, setEditTitle] = useState(title)
 
@@ -33,21 +34,27 @@ const TaskItem = ({id, title, completed, onToggle, onDelete, onEdit}: TaskItemPr
                         />
                     </>
                 ) : (
-                    <>
-                        <button onClick={() => {
-                            setIsEditing(true)
-                            setEditTitle(title)
-                        }}>
-                            <Pencil size={16}/>
-                        </button>
-                        <input
-                            type="checkbox"
-                            checked={completed}
-                            onChange={() => onToggle(id, !completed)}
-                            className="w-5 h-5 cursor-pointer"
-                        />
-                        <span className={completed ? 'line-through text-gray-400 mr-1' : 'font-medium mr-1'}>{title}</span>
-                    </>
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => {
+                                setIsEditing(true)
+                                setEditTitle(title)
+                            }}>
+                                <Pencil size={16}/>
+                            </button>
+                            <input
+                                type="checkbox"
+                                checked={completed}
+                                onChange={() => onToggle(id, !completed)}
+                                className="w-5 h-5 cursor-pointer"
+                            />
+                            <span
+                                className={completed ? 'line-through text-gray-400 mr-1' : 'font-medium mr-1'}>{title}</span>
+                        </div>
+                        <div className="mt-2">
+                            <p className="text-[14px]">{new Date(createdAt).toLocaleDateString()}</p>
+                        </div>
+                    </div>
                 )
                 }
             </div>

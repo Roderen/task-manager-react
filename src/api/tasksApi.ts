@@ -48,7 +48,14 @@ export const tasksApi = createApi({
             },
             invalidatesTags: ['Task'],
         }),
+        getTasksCount: builder.query<{ total: number; completed: number; uncompleted: number }, void>({
+            query: () => ({
+                url: '/tasks/count',
+                method: 'GET'
+            }),
+            providesTags: ['Task'],
+        }),
     }),
 })
 
-export const { useGetTasksQuery, useCreateTaskMutation, useUpdateTaskMutation, useDeleteTaskMutation } = tasksApi
+export const { useGetTasksQuery, useCreateTaskMutation, useUpdateTaskMutation, useDeleteTaskMutation, useGetTasksCountQuery } = tasksApi
