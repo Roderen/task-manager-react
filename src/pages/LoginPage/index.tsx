@@ -7,6 +7,7 @@ import React, {useState} from "react";
 import {useLoginMutation} from "@/api/authApi.ts";
 import {useDispatch} from "react-redux";
 import {login} from "@/store/authSlice.ts";
+import {toast} from "sonner";
 
 const LoginPage = () => {
     const [email, setEmail] = useState("");
@@ -22,6 +23,9 @@ const LoginPage = () => {
         if ('data' in result) {
             dispatch(login());
             navigate("/tasks");
+            toast.success("You have logged in!");
+        } else {
+            toast.error((result.error as any).data?.message ?? 'Something went wrong')
         }
     }
 

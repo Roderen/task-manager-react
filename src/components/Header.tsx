@@ -6,6 +6,7 @@ import {useDispatch} from "react-redux";
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger} from './ui/dropdown-menu';
 import {LogOutIcon, UserIcon, UserRound} from "lucide-react";
 import {useGetUserQuery, usersApi} from "@/api/usersApi.ts";
+import {toast} from "sonner";
 
 type HeaderProps = {
     onNewTask: () => void
@@ -22,6 +23,7 @@ const Header = ({ onNewTask }: HeaderProps) => {
         dispatch(logoutAction())
         dispatch(usersApi.util.resetApiState())
         navigate("/login")
+        toast.info("You have logged out!");
     }
 
     return (
