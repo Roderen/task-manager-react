@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react'
 
 export const authApi = createApi({
     reducerPath: 'authApi',
@@ -33,7 +33,28 @@ export const authApi = createApi({
                 method: 'GET'
             }),
         }),
+        changePasswordRequest: builder.mutation({
+            query: (credentials: { newPassword: string }) => ({
+                url: '/auth/change-password/request',
+                method: 'POST',
+                body: credentials,
+            })
+        }),
+        changePasswordConfirm: builder.mutation({
+            query: (credentials: { code: string }) => ({
+                url: '/auth/change-password/confirm',
+                method: 'POST',
+                body: credentials,
+            })
+        })
     }),
 })
 
-export const { useLoginMutation, useLogoutMutation, useRegisterMutation, useCheckTokenQuery } = authApi
+export const {
+    useLoginMutation,
+    useLogoutMutation,
+    useRegisterMutation,
+    useCheckTokenQuery,
+    useChangePasswordRequestMutation,
+    useChangePasswordConfirmMutation
+} = authApi
