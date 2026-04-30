@@ -5,6 +5,7 @@ import {useGetTasksCountQuery} from "@/api/tasksApi.ts";
 import {Spinner} from "@/components/ui/spinner.tsx";
 import React, {useEffect, useState} from "react";
 import {useChangePasswordConfirmMutation, useChangePasswordRequestMutation} from "@/api/authApi.ts";
+import {toast} from "sonner";
 
 const ProfilePage = () => {
     const { data: user, isLoading } = useGetUserQuery()
@@ -22,13 +23,18 @@ const ProfilePage = () => {
     const handleSaveProfile = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         const result = await updateUser(profileData);
-        console.log(result);
+
+        if ('data' in result) {
+            toast.success('Changes has been saved.')
+        } else {
+            toast.error((result.error as any).data?.message ?? 'Something went wrong')
+        }
     }
 
     const handleChangePassword = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         if (passwordData.newPassword !== passwordData.confirmPassword) {
-            alert("Passwords don't match");
+            toast.error('Passwords do not match')
             return;
         }
 
@@ -36,7 +42,7 @@ const ProfilePage = () => {
         if ('data' in result) {
             setPasswordStep('code')
         } else {
-            alert((result.error as any).data?.message ?? 'Something went wrong')
+            toast.error((result.error as any).data?.message ?? 'Something went wrong')
         }
     }
 
@@ -49,9 +55,9 @@ const ProfilePage = () => {
             setPasswordStep('form')
             setPasswordData({ newPassword: '', confirmPassword: '' })
             setConfirmCode('')
-            alert('Password changed successfully!')
+            toast.success('Password has been changed.')
         } else {
-            alert((result.error as any).data?.message ?? 'Something went wrong')
+            toast.error((result.error as any).data?.message ?? 'Something went wrong')
         }
     }
 

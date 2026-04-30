@@ -5,6 +5,7 @@ import {useCreateTaskMutation, useDeleteTaskMutation, useGetTasksQuery, useUpdat
 import {Spinner} from "@/components/ui/spinner.tsx";
 import SearchTask from "@/pages/TasksPage/SearchTasks.tsx";
 import {useDebounce} from "@/hooks/useDebaunce.ts";
+import {toast} from "sonner";
 
 const TasksPage = () => {
     const [filter, setFilter] = useState<'uncompleted' | 'completed'>('uncompleted')
@@ -26,8 +27,15 @@ const TasksPage = () => {
 
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
-        await createTask({ title: newTaskTitle });
-        setNewTaskTitle("");
+        const result = await createTask({ title: newTaskTitle });
+
+        if ('data' in result) {
+            toast.success('Task created')
+            setNewTaskTitle('')
+            setShowNewTask(false)
+        } else {
+            toast.error((result.error as any).data?.message ?? 'Something went wrong')
+        }
     }
 
     const handleDeleteTask = (taskId: number) => {

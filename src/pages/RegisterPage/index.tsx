@@ -5,6 +5,7 @@ import {Link, useNavigate} from "react-router-dom";
 import bgImage from "@/assets/RegisterPage/bg.png"
 import React, {useState} from "react";
 import {useRegisterMutation} from "@/api/authApi.ts";
+import {toast} from "sonner";
 
 const RegisterPage = () => {
     const [email, setEmail] = useState("");
@@ -15,15 +16,14 @@ const RegisterPage = () => {
 
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
-        if (password !== confirmPassword) {
-            return alert("Passwords don't match");
-        }
+        if (password !== confirmPassword) return toast.error('Passwords do not match');
 
         const result = await registerUser({email, password});
         if ('data' in result) {
             navigate("/login");
+            toast.success('Registered successfully.');
         } else {
-            alert((result.error as any).data?.message ?? 'Registration failed')
+            toast.error((result.error as any).data?.message ?? 'Something went wrong')
         }
     }
 
