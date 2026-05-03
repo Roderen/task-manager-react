@@ -15,7 +15,11 @@ The application serves as a task management solution, allowing you to efficientl
 - **React Router**,
 - **Tailwind and shadcn/ui**
 
+## Requirements
+Node v22.22.2 (npm v10.9.7)
+
 ## How to run
-1. Clone and run backend - [task-manager-nest-api](https://github.com/Roderen/task-manager-nest-api)
-2. npm install
-3. npm run dev
+Before that, clone the backend repository and run - [task-manager-nest-api](https://github.com/Roderen/task-manager-nest-api)
+
+1. npm install
+2. npm run dev
