@@ -14,20 +14,25 @@ const TasksPage = () => {
     const [showNewTask, setShowNewTask] = useState(false)
     const [newTaskTitle, setNewTaskTitle] = useState('')
 
-    const { data: tasks, isLoading} = useGetTasksQuery()
+    const [page, setPage] = useState<number>(1);
+    const [limit, setLimit] = useState<number>(10);
+
+    const {data: tasks, isLoading} = useGetTasksQuery({
+        page,
+        limit,
+        completed: filter === 'completed'
+    })
     const [createTask] = useCreateTaskMutation({})
     const [deleteTask] = useDeleteTaskMutation({})
     const [updateTask] = useUpdateTaskMutation({})
 
-    const filteredTasks = tasks?.filter(task => {
-        const matchesFilter = filter === 'completed' ? task.completed : !task.completed
-        const matchesSearch = task.title.toLowerCase().includes(debouncedSearch.toLowerCase())
-        return matchesFilter && matchesSearch
-    }) ?? []
+    const filteredTasks = tasks?.data?.filter(task =>
+        task.title.toLowerCase().includes(debouncedSearch.toLowerCase())
+    ) ?? []
 
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
-        const result = await createTask({ title: newTaskTitle });
+        const result = await createTask({title: newTaskTitle});
 
         if ('data' in result) {
             toast.success('Task created')
@@ -39,23 +44,23 @@ const TasksPage = () => {
     }
 
     const handleDeleteTask = (taskId: number) => {
-        deleteTask({ id: taskId })
+        deleteTask({id: taskId})
     }
 
     const handleUpdateTask = (taskId: number, completed: boolean) => {
-        updateTask({ id: taskId, completed: !completed })
+        updateTask({id: taskId, completed: !completed})
     }
 
     const handleUpdateTitle = async (taskId: number, title: string) => {
-        await updateTask({ id: taskId, title })
+        await updateTask({id: taskId, title})
     }
 
     return (
         <div className="min-h-screen">
-            <Header onNewTask={() => setShowNewTask(true)} />
+            <Header onNewTask={() => setShowNewTask(true)}/>
 
             <div className="container mx-auto px-8 py-8">
-                <SearchTask value={search} onChange={setSearch} />
+                <SearchTask value={search} onChange={setSearch}/>
 
                 <div className="flex gap-4 mb-6">
                     <button
@@ -109,6 +114,40 @@ const TasksPage = () => {
                         ))
                     ) : (
                         <div className="text-gray-400 text-center py-8">No tasks yet</div>
+                    )}
+
+                    {/* Pagination */}
+                    {tasks && tasks.totalPages > 1 && (
+                        <div className="flex items-center justify-center gap-2 mt-6">
+                            <button
+                                onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+                                disabled={page === 1}
+                                className="px-4 py-2 rounded-lg border disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50"
+                            >
+                                Previous
+                            </button>
+
+                            {Array.from({ length: tasks.totalPages }, (_, i) => i + 1)
+                                .filter(p => p >= page - 1 && p <= page + 2)
+                                .map(p => (
+                                    <button
+                                        key={p}
+                                        onClick={() => setPage(p)}
+                                        className={`px-4 py-2 rounded-lg border ${page === p ? 'bg-black text-white' : 'hover:bg-gray-50'}`}
+                                    >
+                                        {p}
+                                    </button>
+                                ))
+                            }
+
+                            <button
+                                onClick={() => setPage(prev => Math.min(prev + 1, tasks.totalPages))}
+                                disabled={page === tasks.totalPages}
+                                className="px-4 py-2 rounded-lg border disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50"
+                            >
+                                Next
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>
