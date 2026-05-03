@@ -1,5 +1,12 @@
 import {Check, Pencil} from "lucide-react";
 import {useState} from "react";
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel,
+    AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger
+} from "@/components/ui/alert-dialog.tsx";
 
 type TaskItemProps = {
     id: number,
@@ -58,9 +65,23 @@ const TaskItem = ({id, title, completed, onToggle, onDelete, onEdit, createdAt}:
                 )
                 }
             </div>
-            <button onClick={() => onDelete(id)} className="text-red-400 hover:text-red-600 text-sm">
-                Delete
-            </button>
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <button className="text-red-400 hover:text-red-600 text-sm">Delete</button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => onDelete(id)}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }
