@@ -6,6 +6,11 @@ This repository contains the client-side application for a task management syste
 
 The application serves as a task management solution, allowing you to efficiently manage your task list. Key operations include creating tasks, editing tasks, deleting tasks, and marking tasks as complete.
 
+## Screenshots
+![Login Page](./screenshots/login.png)
+![Tasks Page](./screenshots/tasks.png)
+![Profile Page](./screenshots/profile.png)
+
 ## Technology Stack
 
 - **React**,
