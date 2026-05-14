@@ -8,6 +8,7 @@ import {useLoginMutation} from "@/api/authApi.ts";
 import {useDispatch} from "react-redux";
 import {login} from "@/store/authSlice.ts";
 import {toast} from "sonner";
+import {socket} from "@/hooks/useSocket.ts";
 
 const LoginPage = () => {
     const [email, setEmail] = useState("");
@@ -22,6 +23,7 @@ const LoginPage = () => {
 
         if ('data' in result) {
             dispatch(login());
+            socket.connect()
             navigate("/tasks");
             toast.success("You have logged in!");
         } else {

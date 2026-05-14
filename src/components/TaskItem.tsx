@@ -10,6 +10,8 @@ import {
 
 type TaskItemProps = {
     id: number,
+    userId: number,
+    currentUserId?: number,
     title: string,
     completed: boolean,
     onToggle: (id: number, completed: boolean) => void,
@@ -18,7 +20,8 @@ type TaskItemProps = {
     createdAt: Date
 }
 
-const TaskItem = ({id, title, completed, onToggle, onDelete, onEdit, createdAt}: TaskItemProps) => {
+const TaskItem = ({id, userId, currentUserId, title, completed, onToggle, onDelete, onEdit, createdAt}: TaskItemProps) => {
+    const isOwner = currentUserId === userId
     const [isEditing, setIsEditing] = useState<boolean>(false)
     const [editTitle, setEditTitle] = useState(title)
 
@@ -43,18 +46,21 @@ const TaskItem = ({id, title, completed, onToggle, onDelete, onEdit, createdAt}:
                 ) : (
                     <div className="flex flex-col">
                         <div className="flex items-center gap-2">
-                            <button onClick={() => {
-                                setIsEditing(true)
-                                setEditTitle(title)
-                            }}>
-                                <Pencil size={16}/>
-                            </button>
-                            <input
-                                type="checkbox"
-                                checked={completed}
-                                onChange={() => onToggle(id, !completed)}
-                                className="w-5 h-5 cursor-pointer"
-                            />
+                            {isOwner && <>
+                                <button onClick={() => {
+                                    setIsEditing(true)
+                                    setEditTitle(title)
+                                }}>
+                                    <Pencil size={16}/>
+                                </button>
+                                <input
+                                    type="checkbox"
+                                    checked={completed}
+                                    onChange={() => onToggle(id, !completed)}
+                                    className="w-5 h-5 cursor-pointer"
+                                />
+                            </>
+                            }
                             <span
                                 className={completed ? 'line-through text-gray-400 mr-1' : 'font-medium mr-1'}>{title}</span>
                         </div>
@@ -65,7 +71,7 @@ const TaskItem = ({id, title, completed, onToggle, onDelete, onEdit, createdAt}:
                 )
                 }
             </div>
-            <AlertDialog>
+            {isOwner && <AlertDialog>
                 <AlertDialogTrigger asChild>
                     <button className="text-red-400 hover:text-red-600 text-sm">Delete</button>
                 </AlertDialogTrigger>
@@ -82,6 +88,8 @@ const TaskItem = ({id, title, completed, onToggle, onDelete, onEdit, createdAt}:
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+            }
+            {!isOwner && <p>Text Me Button</p>}
         </div>
     )
 }

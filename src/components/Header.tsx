@@ -1,15 +1,16 @@
 import { Button } from '@/components/ui/button'
 import {useLogoutMutation} from "@/api/authApi.ts";
-import {useNavigate} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import { logout as logoutAction } from '@/store/authSlice'
 import {useDispatch} from "react-redux";
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger} from './ui/dropdown-menu';
 import {LogOutIcon, UserIcon, UserRound} from "lucide-react";
 import {useGetUserQuery, usersApi} from "@/api/usersApi.ts";
 import {toast} from "sonner";
+import {socket} from "@/hooks/useSocket.ts";
 
 type HeaderProps = {
-    onNewTask: () => void
+    onNewTask?: () => void
 }
 
 const Header = ({ onNewTask }: HeaderProps) => {
@@ -22,13 +23,14 @@ const Header = ({ onNewTask }: HeaderProps) => {
         await logout()
         dispatch(logoutAction())
         dispatch(usersApi.util.resetApiState())
+        socket.disconnect()
         navigate("/login")
         toast.info("You have logged out!");
     }
 
     return (
         <header className="flex items-center gap-2 md:justify-between px-4 md:px-8 py-4 border-b">
-            <div className="text-xl font-bold">TaskManager</div>
+            <Link to="/tasks" className="cursor-pointer text-xl font-bold">TaskManager</Link>
             <Button onClick={onNewTask} className="cursor-pointer ml-auto md:ml-0">+ New Task</Button>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>

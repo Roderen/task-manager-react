@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type {Task} from "@/types/task.ts";
+import type {Task, TasksResponse} from "@/types/task.ts";
 
 export const tasksApi = createApi({
     reducerPath: 'tasksApi',
@@ -14,6 +14,14 @@ export const tasksApi = createApi({
                 url: '/tasks',
                 method: 'GET',
                 params: { page, limit, completed }
+            }),
+            providesTags: ['Task'],
+        }),
+        getHelpTasks: builder.query<TasksResponse, { page: number, limit: number }>({
+            query: ({ page, limit }) => ({
+                url: '/tasks/help',
+                method: 'GET',
+                params: { page, limit }
             }),
             providesTags: ['Task'],
         }),
@@ -59,4 +67,4 @@ export const tasksApi = createApi({
     }),
 })
 
-export const { useGetTasksQuery, useCreateTaskMutation, useUpdateTaskMutation, useDeleteTaskMutation, useGetTasksCountQuery } = tasksApi
+export const { useGetTasksQuery, useGetHelpTasksQuery, useCreateTaskMutation, useUpdateTaskMutation, useDeleteTaskMutation, useGetTasksCountQuery } = tasksApi

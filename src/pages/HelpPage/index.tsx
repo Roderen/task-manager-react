@@ -1,50 +1,26 @@
-import React, {useState} from 'react'
+import {useState} from 'react'
 import Header from '@/components/Header'
 import TaskItem from '@/components/TaskItem'
-import {useCreateTaskMutation, useDeleteTaskMutation, useGetTasksQuery, useUpdateTaskMutation} from "@/api/tasksApi.ts";
+import {useDeleteTaskMutation, useGetHelpTasksQuery, useUpdateTaskMutation} from "@/api/tasksApi.ts";
 import {Spinner} from "@/components/ui/spinner.tsx";
-import SearchTask from "@/pages/TasksPage/SearchTasks.tsx";
-import {useDebounce} from "@/hooks/useDebaunce.ts";
-import {toast} from "sonner";
-import {Link} from "react-router-dom";
+import {useHelpNeeded} from "@/hooks/useNeedsHelp.ts";
 import {useGetUserQuery} from "@/api/usersApi.ts";
 
 const TasksPage = () => {
-    const [filter, setFilter] = useState<'uncompleted' | 'completed'>('uncompleted')
-    const [search, setSearch] = useState('')
-    const debouncedSearch = useDebounce(search, 300)
-    const [showNewTask, setShowNewTask] = useState(false)
-    const [newTaskTitle, setNewTaskTitle] = useState('')
     const {data: currentUser} = useGetUserQuery()
-
     const [page, setPage] = useState<number>(1);
     const limit = 10
 
-    const {data: tasks, isLoading} = useGetTasksQuery({
+    const {data: tasks, isLoading} = useGetHelpTasksQuery({
         page,
         limit,
-        completed: filter === 'completed'
     })
-    const [createTask] = useCreateTaskMutation({})
     const [deleteTask] = useDeleteTaskMutation({})
     const [updateTask] = useUpdateTaskMutation({})
 
-    const filteredTasks = tasks?.data?.filter(task =>
-        task.title.toLowerCase().includes(debouncedSearch.toLowerCase())
-    ) ?? []
+    const realtimeTasks = useHelpNeeded()
 
-    const handleSubmit = async (e: React.SyntheticEvent) => {
-        e.preventDefault();
-        const result = await createTask({title: newTaskTitle});
-
-        if ('data' in result) {
-            toast.success('Task created')
-            setNewTaskTitle('')
-            setShowNewTask(false)
-        } else {
-            toast.error((result.error as any).data?.message ?? 'Something went wrong')
-        }
-    }
+    const allTasks = [...realtimeTasks, ...(tasks?.data ?? [])]
 
     const handleDeleteTask = (taskId: number) => {
         deleteTask({id: taskId})
@@ -60,55 +36,16 @@ const TasksPage = () => {
 
     return (
         <div className="min-h-screen">
-            <Header onNewTask={() => setShowNewTask(true)}/>
+            <Header/>
 
             <div className="container mx-auto px-8 py-8">
-                <SearchTask value={search} onChange={setSearch}/>
-
-                <div className="flex justify-between items-center gap-3 mb-6">
-                    <div className="flex gap-4">
-                        <button
-                            onClick={() => setFilter('uncompleted')}
-                            className={`cursor-pointer px-4 py-2 rounded-lg font-medium ${filter === 'uncompleted' ? 'bg-black text-white' : 'text-gray-500'}`}
-                        >
-                            Uncompleted
-                        </button>
-                        <button
-                            onClick={() => setFilter('completed')}
-                            className={`cursor-pointer px-4 py-2 rounded-lg font-medium ${filter === 'completed' ? 'bg-black text-white' : 'text-gray-500'}`}
-                        >
-                            Completed
-                        </button>
-                    </div>
-                    <div>
-                        <Link to="/tasks-help" className="cursor-pointer px-4 py-2 rounded-lg font-medium text-gray-500">Need Help</Link>
-                    </div>
-                </div>
-
-                {showNewTask && (
-                    <form className="flex gap-3 mb-6" onSubmit={handleSubmit}>
-                        <input
-                            type="text"
-                            value={newTaskTitle}
-                            onChange={(e) => setNewTaskTitle(e.target.value)}
-                            placeholder="Task title..."
-                            className="flex-1 border rounded-lg px-4 py-2"
-                            required
-                        />
-                        <button type="submit" className="bg-black text-white px-4 py-2 rounded-lg">Add</button>
-                        <button type="button" onClick={() => setShowNewTask(false)}
-                                className="text-gray-500 px-4 py-2">Cancel
-                        </button>
-                    </form>
-                )}
-
                 <div className="flex flex-col gap-3">
                     {isLoading ? (
                         <div className="w-100% flex justify-center items-center">
                             <Spinner className="size-8"/>
                         </div>
-                    ) : filteredTasks.length > 0 ? (
-                        filteredTasks.map((task) => (
+                    ) : allTasks.length > 0 ? (
+                        allTasks.map((task) => (
                             <TaskItem
                                 key={task.id}
                                 id={task.id}
