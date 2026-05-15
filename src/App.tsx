@@ -13,14 +13,11 @@ import {Spinner} from "@/components/ui/spinner.tsx";
 import ProfilePage from "@/pages/ProfilePage";
 import HelpPage from "@/pages/HelpPage";
 import {socket} from "@/hooks/useSocket.ts";
-import {useHelpNeeded} from "@/hooks/useNeedsHelp.ts";
 
 function App() {
     const getToken = useSelector((state: RootState) => state.auth.isAuthenticated)
     const dispatch = useDispatch()
     const {isSuccess, isLoading} = useCheckTokenQuery()
-
-    useHelpNeeded();
 
     useEffect(() => {
         if (isSuccess) {

@@ -4,7 +4,7 @@ import type { Task } from '@/types/task'
 import {toast} from "sonner";
 import {useSound} from "react-sounds";
 
-export const useHelpNeeded = () => {
+export const useHelpNeeded = (onCancel?: (taskId: number) => void) => {
     const [helpTasks, setHelpTasks] = useState<Task[]>([])
     const {play} = useSound('notification/info', {
         volume: 0.3
@@ -17,10 +17,17 @@ export const useHelpNeeded = () => {
             play()
         }
 
+        function onHelpCanceled(taskId: number) {
+            setHelpTasks(prev => prev.filter(t => t.id !== taskId))
+            onCancel?.(taskId)
+        }
+
         socket.on('helpNeeded', onHelpNeeded)
+        socket.on('helpCancelNeeded', onHelpCanceled)
 
         return () => {
             socket.off('helpNeeded', onHelpNeeded)
+            socket.off('helpCancelNeeded', onHelpCanceled)
         }
     }, [])
 

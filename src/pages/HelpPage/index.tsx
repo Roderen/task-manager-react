@@ -18,9 +18,15 @@ const TasksPage = () => {
     const [deleteTask] = useDeleteTaskMutation({})
     const [updateTask] = useUpdateTaskMutation({})
 
-    const { helpTasks: realtimeTasks, removeTask } = useHelpNeeded()
+    const [canceledIds, setCanceledIds] = useState<number[]>([])
+
+    const { helpTasks: realtimeTasks } = useHelpNeeded((taskId) => {
+        setCanceledIds(prev => [...prev, taskId])
+    })
 
     const allTasks = [...realtimeTasks, ...(tasks?.data ?? [])]
+        .filter(task => !canceledIds.includes(task.id))
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
     const handleDeleteTask = (taskId: number) => {
         deleteTask({id: taskId})
@@ -31,11 +37,7 @@ const TasksPage = () => {
     }
 
     const handleUpdateTitle = async (taskId: number, title?: string, needsHelp?: boolean) => {
-        console.log('handleUpdateTitle:', taskId, title, needsHelp)
         await updateTask({ id: taskId, title, needsHelp })
-        if (needsHelp === false) {
-            removeTask(taskId)
-        }
     }
 
     return (
