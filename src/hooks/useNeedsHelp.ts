@@ -24,5 +24,9 @@ export const useHelpNeeded = () => {
         }
     }, [])
 
-    return helpTasks
+    const removeTask = (taskId: number) => {
+        setHelpTasks(prev => prev.filter(t => t.id !== taskId))
+    }
+
+    return { helpTasks, removeTask }
 }

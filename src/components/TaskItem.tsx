@@ -12,15 +12,27 @@ type TaskItemProps = {
     id: number,
     userId: number,
     currentUserId?: number,
+    needsHelp?: boolean,
     title: string,
     completed: boolean,
     onToggle: (id: number, completed: boolean) => void,
     onDelete: (id: number) => void,
-    onEdit: (id: number, title: string) => Promise<void>,
+    onEdit: (id: number, title?: string, needsHelp?: boolean) => Promise<void>,
     createdAt: Date
 }
 
-const TaskItem = ({id, userId, currentUserId, title, completed, onToggle, onDelete, onEdit, createdAt}: TaskItemProps) => {
+const TaskItem = ({
+                      id,
+                      userId,
+                      currentUserId,
+                      title,
+                      needsHelp,
+                      completed,
+                      onToggle,
+                      onDelete,
+                      onEdit,
+                      createdAt
+                  }: TaskItemProps) => {
     const isOwner = currentUserId === userId
     const [isEditing, setIsEditing] = useState<boolean>(false)
     const [editTitle, setEditTitle] = useState(title)
@@ -71,24 +83,34 @@ const TaskItem = ({id, userId, currentUserId, title, completed, onToggle, onDele
                 )
                 }
             </div>
-            {isOwner && <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <button className="text-red-400 hover:text-red-600 text-sm">Delete</button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This action cannot be undone.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => onDelete(id)}>Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-            }
+            {isOwner && (
+                <div className="flex items-center gap-6">
+                    {!completed ? (
+                        <button className="cursor-pointer underline" onClick={async () => {
+                            await onEdit(id, undefined, !needsHelp)
+                        }}>
+                            {needsHelp ? 'Cancel Help' : 'Ask Help'}
+                        </button>
+                    ) : ''}
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <button className="text-red-400 hover:text-red-600 text-sm">Delete</button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => onDelete(id)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </div>
+            )}
             {!isOwner && <p>Text Me Button</p>}
         </div>
     )

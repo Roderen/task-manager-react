@@ -38,11 +38,11 @@ export const tasksApi = createApi({
         }),
         updateTask: builder.mutation({
             query(data) {
-                const { id, completed, title } = data
+                const { id, completed, title, needsHelp } = data
                 return {
                     url: `/tasks/${id}`,
                     method: 'PUT',
-                    body: { completed, title }
+                    body: { completed, title, needsHelp }
                 }
             },
             invalidatesTags: ['Task'],

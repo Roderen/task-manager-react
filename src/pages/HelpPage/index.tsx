@@ -18,7 +18,7 @@ const TasksPage = () => {
     const [deleteTask] = useDeleteTaskMutation({})
     const [updateTask] = useUpdateTaskMutation({})
 
-    const realtimeTasks = useHelpNeeded()
+    const { helpTasks: realtimeTasks, removeTask } = useHelpNeeded()
 
     const allTasks = [...realtimeTasks, ...(tasks?.data ?? [])]
 
@@ -30,8 +30,12 @@ const TasksPage = () => {
         updateTask({id: taskId, completed: !completed})
     }
 
-    const handleUpdateTitle = async (taskId: number, title: string) => {
-        await updateTask({id: taskId, title})
+    const handleUpdateTitle = async (taskId: number, title?: string, needsHelp?: boolean) => {
+        console.log('handleUpdateTitle:', taskId, title, needsHelp)
+        await updateTask({ id: taskId, title, needsHelp })
+        if (needsHelp === false) {
+            removeTask(taskId)
+        }
     }
 
     return (
@@ -51,11 +55,12 @@ const TasksPage = () => {
                                 id={task.id}
                                 userId={task.userId}
                                 currentUserId={currentUser?.id}
+                                needsHelp={task.needsHelp}
                                 title={task.title}
                                 completed={task.completed}
                                 onToggle={() => handleUpdateTask(task.id, task.completed)}
                                 onDelete={() => handleDeleteTask(task.id)}
-                                onEdit={(id, title) => handleUpdateTitle(id, title)}
+                                onEdit={(id, title, needsHelp) => handleUpdateTitle(id, title, needsHelp)}
                                 createdAt={task.createdAt}
                             />
                         ))

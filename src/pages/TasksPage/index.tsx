@@ -54,8 +54,8 @@ const TasksPage = () => {
         updateTask({id: taskId, completed: !completed})
     }
 
-    const handleUpdateTitle = async (taskId: number, title: string) => {
-        await updateTask({id: taskId, title})
+    const handleUpdateTitle = async (taskId: number, title?: string, needsHelp?: boolean) => {
+        await updateTask({id: taskId, title, needsHelp})
     }
 
     return (
@@ -114,11 +114,12 @@ const TasksPage = () => {
                                 id={task.id}
                                 userId={task.userId}
                                 currentUserId={currentUser?.id}
+                                needsHelp={task.needsHelp}
                                 title={task.title}
                                 completed={task.completed}
                                 onToggle={() => handleUpdateTask(task.id, task.completed)}
                                 onDelete={() => handleDeleteTask(task.id)}
-                                onEdit={(id, title) => handleUpdateTitle(id, title)}
+                                onEdit={(id, title, needsHelp) => handleUpdateTitle(id, title, needsHelp)}
                                 createdAt={task.createdAt}
                             />
                         ))
