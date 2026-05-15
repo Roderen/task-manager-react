@@ -3,6 +3,7 @@ import authReducer from "./authSlice";
 import {authApi} from "@/api/authApi.ts";
 import {tasksApi} from "@/api/tasksApi.ts";
 import {usersApi} from "@/api/usersApi.ts";
+import {useDispatch} from "react-redux";
 
 export const store = configureStore({
    reducer: {
@@ -21,3 +22,4 @@ export const store = configureStore({
 
 export type RootState = ReturnType<typeof store.getState>
 export type AppDispatch = typeof store.dispatch
+export const useAppDispatch = () => useDispatch<AppDispatch>()

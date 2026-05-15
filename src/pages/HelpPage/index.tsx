@@ -6,26 +6,18 @@ import {Spinner} from "@/components/ui/spinner.tsx";
 import {useHelpNeeded} from "@/hooks/useNeedsHelp.ts";
 import {useGetUserQuery} from "@/api/usersApi.ts";
 
-const TasksPage = () => {
+const HelpPage = () => {
     const {data: currentUser} = useGetUserQuery()
     const [page, setPage] = useState<number>(1);
     const limit = 10
 
-    const {data: tasks, isLoading} = useGetHelpTasksQuery({
-        page,
-        limit,
-    })
+    const {data: tasks, isLoading} = useGetHelpTasksQuery({ page, limit })
     const [deleteTask] = useDeleteTaskMutation({})
     const [updateTask] = useUpdateTaskMutation({})
 
-    const [canceledIds, setCanceledIds] = useState<number[]>([])
-
-    const { helpTasks: realtimeTasks } = useHelpNeeded((taskId) => {
-        setCanceledIds(prev => [...prev, taskId])
-    })
+    const { helpTasks: realtimeTasks } = useHelpNeeded(page, limit)
 
     const allTasks = [...realtimeTasks, ...(tasks?.data ?? [])]
-        .filter(task => !canceledIds.includes(task.id))
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
     const handleDeleteTask = (taskId: number) => {
@@ -43,7 +35,6 @@ const TasksPage = () => {
     return (
         <div className="min-h-screen">
             <Header/>
-
             <div className="container mx-auto px-8 py-8">
                 <div className="flex flex-col gap-3">
                     {isLoading ? (
@@ -70,7 +61,6 @@ const TasksPage = () => {
                         <div className="text-gray-400 text-center py-8">No tasks yet</div>
                     )}
 
-                    {/* Pagination */}
                     {tasks && tasks.totalPages > 1 && (
                         <div className="flex items-center justify-center gap-2 mt-6">
                             <button
@@ -80,7 +70,6 @@ const TasksPage = () => {
                             >
                                 Previous
                             </button>
-
                             {Array.from({ length: tasks.totalPages }, (_, i) => i + 1)
                                 .filter(p => p >= page - 1 && p <= page + 2)
                                 .map(p => (
@@ -93,7 +82,6 @@ const TasksPage = () => {
                                     </button>
                                 ))
                             }
-
                             <button
                                 onClick={() => setPage(prev => Math.min(prev + 1, tasks.totalPages))}
                                 disabled={page === tasks.totalPages}
@@ -109,4 +97,4 @@ const TasksPage = () => {
     )
 }
 
-export default TasksPage
+export default HelpPage

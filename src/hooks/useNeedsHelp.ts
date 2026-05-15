@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
 import { socket } from './useSocket'
+import { tasksApi } from '@/api/tasksApi'
 import type { Task } from '@/types/task'
-import {toast} from "sonner";
-import {useSound} from "react-sounds";
+import { toast } from 'sonner'
+import { useSound } from 'react-sounds'
+import {useAppDispatch} from "@/store/store.ts";
 
-export const useHelpNeeded = (onCancel?: (taskId: number) => void) => {
+export const useHelpNeeded = (page: number, limit: number) => {
+    const dispatch = useAppDispatch()
     const [helpTasks, setHelpTasks] = useState<Task[]>([])
-    const {play} = useSound('notification/info', {
-        volume: 0.3
-    })
+    const { play } = useSound('notification/info', { volume: 0.3 })
 
     useEffect(() => {
         function onHelpNeeded(task: Task) {
@@ -19,7 +20,9 @@ export const useHelpNeeded = (onCancel?: (taskId: number) => void) => {
 
         function onHelpCanceled(taskId: number) {
             setHelpTasks(prev => prev.filter(t => t.id !== taskId))
-            onCancel?.(taskId)
+            dispatch(tasksApi.util.updateQueryData('getHelpTasks', { page, limit }, (draft) => {
+                draft.data = draft.data.filter(t => t.id !== taskId)
+            }))
         }
 
         socket.on('helpNeeded', onHelpNeeded)
@@ -31,9 +34,5 @@ export const useHelpNeeded = (onCancel?: (taskId: number) => void) => {
         }
     }, [])
 
-    const removeTask = (taskId: number) => {
-        setHelpTasks(prev => prev.filter(t => t.id !== taskId))
-    }
-
-    return { helpTasks, removeTask }
+    return { helpTasks }
 }
