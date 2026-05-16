@@ -31,7 +31,9 @@ const Header = ({ onNewTask }: HeaderProps) => {
     return (
         <header className="flex items-center gap-2 md:justify-between px-4 md:px-8 py-4 border-b">
             <Link to="/tasks" className="cursor-pointer text-xl font-bold">TaskManager</Link>
-            <Button onClick={onNewTask} className="cursor-pointer ml-auto md:ml-0">+ New Task</Button>
+            {
+                onNewTask && <Button onClick={onNewTask} className="cursor-pointer ml-auto md:ml-0">+ New Task</Button>
+            }
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <div
