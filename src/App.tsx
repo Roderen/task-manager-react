@@ -13,6 +13,7 @@ import {Spinner} from "@/components/ui/spinner.tsx";
 import ProfilePage from "@/pages/ProfilePage";
 import HelpPage from "@/pages/HelpPage";
 import {socket} from "@/hooks/useSocket.ts";
+import ChatWidget from "@/components/ChatWidget";
 
 function App() {
     const getToken = useSelector((state: RootState) => state.auth.isAuthenticated)
@@ -70,6 +71,8 @@ function App() {
                     <Route path="*" element={<Navigate to="/login" replace/>}/>
                 </Routes>
             </BrowserRouter>
+
+            {getToken && <ChatWidget />}
         </>
     )
 }

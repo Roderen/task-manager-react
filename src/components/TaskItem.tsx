@@ -1,4 +1,4 @@
-import {Check, Pencil} from "lucide-react";
+import {Check, HandHelping, MessageCircleMore, Pencil, Trash2} from "lucide-react";
 import {useState} from "react";
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel,
@@ -7,6 +7,9 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger
 } from "@/components/ui/alert-dialog.tsx";
+import {setActiveConversation, toggleChat} from "@/store/chatSlice.ts";
+import {useDispatch} from "react-redux";
+import {useCreateConversationMutation} from "@/api/messagesApi.ts";
 
 type TaskItemProps = {
     id: number,
@@ -36,6 +39,8 @@ const TaskItem = ({
     const isOwner = currentUserId === userId
     const [isEditing, setIsEditing] = useState<boolean>(false)
     const [editTitle, setEditTitle] = useState(title)
+    const dispatch = useDispatch()
+    const [createConversation] = useCreateConversationMutation()
 
     return (
         <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -89,12 +94,17 @@ const TaskItem = ({
                         <button className="cursor-pointer underline" onClick={async () => {
                             await onEdit(id, undefined, !needsHelp)
                         }}>
-                            {needsHelp ? 'Cancel Help' : 'Ask Help'}
+                            {needsHelp ? (
+                                <div className="flex align-center gap-1">
+                                    <HandHelping size={24} />
+                                    <span>(Cancel)</span>
+                                </div>
+                            ) : <HandHelping size={24} />}
                         </button>
                     ) : ''}
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <button className="text-red-400 hover:text-red-600 text-sm">Delete</button>
+                            <button className="text-red-400 hover:text-red-600 text-sm"><Trash2 size={20}/></button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>
@@ -111,7 +121,18 @@ const TaskItem = ({
                     </AlertDialog>
                 </div>
             )}
-            {!isOwner && <p>Text Me Button</p>}
+
+            {!isOwner && (
+                <button className="cursor-pointer" onClick={async () => {
+                    const result = await createConversation({ receiverId: userId })
+                    if ('data' in result && result.data) {
+                        dispatch(toggleChat())
+                        dispatch(setActiveConversation(result.data.conversationId))
+                    }
+                }}>
+                    <MessageCircleMore size={24} />
+                </button>
+            )}
         </div>
     )
 }
