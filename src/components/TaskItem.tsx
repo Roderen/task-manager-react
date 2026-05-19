@@ -1,4 +1,4 @@
-import {Check, Pencil} from "lucide-react";
+import {Check, HandHelping, MessageCircleMore, Pencil, Trash2} from "lucide-react";
 import {useState} from "react";
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel,
@@ -7,20 +7,40 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger
 } from "@/components/ui/alert-dialog.tsx";
+import {setActiveConversation, toggleChat} from "@/store/chatSlice.ts";
+import {useDispatch} from "react-redux";
+import {useCreateConversationMutation} from "@/api/messagesApi.ts";
 
 type TaskItemProps = {
     id: number,
+    userId: number,
+    currentUserId?: number,
+    needsHelp?: boolean,
     title: string,
     completed: boolean,
     onToggle: (id: number, completed: boolean) => void,
     onDelete: (id: number) => void,
-    onEdit: (id: number, title: string) => Promise<void>,
+    onEdit: (id: number, title?: string, needsHelp?: boolean) => Promise<void>,
     createdAt: Date
 }
 
-const TaskItem = ({id, title, completed, onToggle, onDelete, onEdit, createdAt}: TaskItemProps) => {
+const TaskItem = ({
+                      id,
+                      userId,
+                      currentUserId,
+                      title,
+                      needsHelp,
+                      completed,
+                      onToggle,
+                      onDelete,
+                      onEdit,
+                      createdAt
+                  }: TaskItemProps) => {
+    const isOwner = currentUserId === userId
     const [isEditing, setIsEditing] = useState<boolean>(false)
     const [editTitle, setEditTitle] = useState(title)
+    const dispatch = useDispatch()
+    const [createConversation] = useCreateConversationMutation()
 
     return (
         <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -43,18 +63,21 @@ const TaskItem = ({id, title, completed, onToggle, onDelete, onEdit, createdAt}:
                 ) : (
                     <div className="flex flex-col">
                         <div className="flex items-center gap-2">
-                            <button onClick={() => {
-                                setIsEditing(true)
-                                setEditTitle(title)
-                            }}>
-                                <Pencil size={16}/>
-                            </button>
-                            <input
-                                type="checkbox"
-                                checked={completed}
-                                onChange={() => onToggle(id, !completed)}
-                                className="w-5 h-5 cursor-pointer"
-                            />
+                            {isOwner && <>
+                                <button onClick={() => {
+                                    setIsEditing(true)
+                                    setEditTitle(title)
+                                }}>
+                                    <Pencil size={16}/>
+                                </button>
+                                <input
+                                    type="checkbox"
+                                    checked={completed}
+                                    onChange={() => onToggle(id, !completed)}
+                                    className="w-5 h-5 cursor-pointer"
+                                />
+                            </>
+                            }
                             <span
                                 className={completed ? 'line-through text-gray-400 mr-1' : 'font-medium mr-1'}>{title}</span>
                         </div>
@@ -65,23 +88,51 @@ const TaskItem = ({id, title, completed, onToggle, onDelete, onEdit, createdAt}:
                 )
                 }
             </div>
-            <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <button className="text-red-400 hover:text-red-600 text-sm">Delete</button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This action cannot be undone.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => onDelete(id)}>Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            {isOwner && (
+                <div className="flex items-center gap-6">
+                    {!completed ? (
+                        <button className="cursor-pointer underline" onClick={async () => {
+                            await onEdit(id, undefined, !needsHelp)
+                        }}>
+                            {needsHelp ? (
+                                <div className="flex align-center gap-1">
+                                    <HandHelping size={24} />
+                                    <span>(Cancel)</span>
+                                </div>
+                            ) : <HandHelping size={24} />}
+                        </button>
+                    ) : ''}
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <button className="text-red-400 hover:text-red-600 text-sm"><Trash2 size={20}/></button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => onDelete(id)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </div>
+            )}
+
+            {!isOwner && (
+                <button className="cursor-pointer" onClick={async () => {
+                    const result = await createConversation({ receiverId: userId })
+                    if ('data' in result && result.data) {
+                        dispatch(toggleChat())
+                        dispatch(setActiveConversation(result.data.conversationId))
+                    }
+                }}>
+                    <MessageCircleMore size={24} />
+                </button>
+            )}
         </div>
     )
 }

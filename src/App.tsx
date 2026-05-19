@@ -11,6 +11,9 @@ import {useEffect} from "react";
 import type {RootState} from "@/store/store.ts";
 import {Spinner} from "@/components/ui/spinner.tsx";
 import ProfilePage from "@/pages/ProfilePage";
+import HelpPage from "@/pages/HelpPage";
+import {socket} from "@/hooks/useSocket.ts";
+import ChatWidget from "@/components/ChatWidget";
 
 function App() {
     const getToken = useSelector((state: RootState) => state.auth.isAuthenticated)
@@ -22,6 +25,29 @@ function App() {
             dispatch(login())
         }
     }, [isSuccess])
+
+    useEffect(() => {
+        if (getToken || isSuccess) {
+            socket.connect()
+        }
+    }, [getToken, isSuccess])
+
+    useEffect(() => {
+        function onConnect() {
+            console.log('socket connected')
+        }
+        function onDisconnect() {
+            console.log('socket disconnected')
+        }
+
+        socket.on('connect', onConnect)
+        socket.on('disconnect', onDisconnect)
+
+        return () => {
+            socket.off('connect', onConnect)
+            socket.off('disconnect', onDisconnect)
+        }
+    }, [])
 
     if (isLoading) return <Spinner/>
 
@@ -38,12 +64,15 @@ function App() {
 
                     <Route element={<ProtectedRoute isAuthenticated={getToken || isSuccess}/>}>
                         <Route path="/tasks" element={<TasksPage/>}/>
+                        <Route path="/tasks-help" element={<HelpPage/>}/>
                         <Route path="/profile" element={<ProfilePage/>} />
                     </Route>
 
                     <Route path="*" element={<Navigate to="/login" replace/>}/>
                 </Routes>
             </BrowserRouter>
+
+            {getToken && <ChatWidget />}
         </>
     )
 }
