@@ -1,8 +1,8 @@
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = window.location.origin
+const URL = import.meta.env.VITE_API_URL
 
-export const socket = io(SOCKET_URL, {
+export const socket = io(URL, {
     withCredentials: true,
-    autoConnect: false,
+    autoConnect: false
 })
