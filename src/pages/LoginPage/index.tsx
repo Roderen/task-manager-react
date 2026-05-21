@@ -23,6 +23,9 @@ const LoginPage = () => {
 
         if ('data' in result) {
             dispatch(login());
+            const res = await fetch('/api/auth/ws-token', { credentials: 'include' })
+            const data = await res.json()
+            socket.auth = { token: data.token }
             socket.connect()
             navigate("/tasks");
             toast.success("You have logged in!");
