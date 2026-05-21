@@ -22,13 +22,10 @@ const LoginPage = () => {
         const result = await loginUser({email, password});
 
         if ('data' in result) {
-            dispatch(login());
-            const res = await fetch('/api/auth/ws-token', { credentials: 'include' })
-            const data = await res.json()
-            socket.auth = { token: data.token }
+            dispatch(login())
             socket.connect()
-            navigate("/tasks");
-            toast.success("You have logged in!");
+            navigate("/tasks")
+            toast.success("You have logged in!")
         } else {
             toast.error((result.error as any).data?.message ?? 'Something went wrong')
         }

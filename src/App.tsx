@@ -28,13 +28,7 @@ function App() {
 
     useEffect(() => {
         if (getToken || isSuccess) {
-            const connectSocket = async () => {
-                const res = await fetch('/api/auth/ws-token', { credentials: 'include' })
-                const data = await res.json()
-                socket.auth = { token: data.token }
-                socket.connect()
-            }
-            connectSocket()
+            socket.connect()
         }
     }, [getToken, isSuccess])
 
