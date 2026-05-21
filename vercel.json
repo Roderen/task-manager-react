@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://task-manager-roderen.duckdns.org/:path*"
+      "destination": "https://api.task-manager.lol/:path*"
     },
     {
       "source": "/(.*)",
