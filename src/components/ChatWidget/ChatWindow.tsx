@@ -14,7 +14,7 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
     const [text, setText] = useState('')
     const [realtimeMessages, setRealtimeMessages] = useState<any[]>([])
     const { data: currentUser } = useGetUserQuery()
-    const { data: messages, isLoading } = useGetMessagesQuery(conversationId)
+    const { data: getMessages, isLoading } = useGetMessagesQuery(conversationId)
     const [sendMessage] = useSendMessageMutation()
     const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -33,9 +33,9 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, [messages, realtimeMessages])
+    }, [getMessages, realtimeMessages])
 
-    const allMessages = [...(messages ?? []), ...realtimeMessages]
+    const allMessages = [...(getMessages?.messages ?? []), ...realtimeMessages]
 
     const handleSend = async () => {
         if (!text.trim()) return
