@@ -14,6 +14,7 @@ import ProfilePage from "@/pages/ProfilePage";
 import HelpPage from "@/pages/HelpPage";
 import {socket} from "@/hooks/useSocket.ts";
 import ChatWidget from "@/components/ChatWidget";
+import {useGotMessage} from "@/hooks/useGotMessage.ts";
 
 function App() {
     const getToken = useSelector((state: RootState) => state.auth.isAuthenticated)
@@ -25,6 +26,8 @@ function App() {
             dispatch(login())
         }
     }, [isSuccess])
+
+    useGotMessage(isSuccess)
 
     useEffect(() => {
         if (getToken || isSuccess) {
