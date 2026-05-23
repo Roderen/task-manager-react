@@ -1,83 +1,93 @@
-import './App.css'
-import {BrowserRouter, Navigate, Route, Routes} from "react-router-dom";
-import LoginPage from './pages/LoginPage';
+import "./App.css";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import LoginPage from "./pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import TasksPage from "@/pages/TasksPage";
-import {ProtectedRoute} from "../ProtectedRoute.tsx";
-import {useCheckTokenQuery} from '@/api/authApi'
-import {useDispatch, useSelector} from 'react-redux'
-import {login} from '@/store/authSlice'
-import {useEffect} from "react";
-import type {RootState} from "@/store/store.ts";
-import {Spinner} from "@/components/ui/spinner.tsx";
+import { ProtectedRoute } from "../ProtectedRoute.tsx";
+import { useCheckTokenQuery } from "@/api/authApi";
+import { useDispatch, useSelector } from "react-redux";
+import { login } from "@/store/authSlice";
+import { useEffect } from "react";
+import type { RootState } from "@/store/store.ts";
+import { Spinner } from "@/components/ui/spinner.tsx";
 import ProfilePage from "@/pages/ProfilePage";
 import HelpPage from "@/pages/HelpPage";
-import {socket} from "@/hooks/useSocket.ts";
+import { socket } from "@/hooks/useSocket.ts";
 import ChatWidget from "@/components/ChatWidget";
-import {useGotMessage} from "@/hooks/useGotMessage.ts";
+import { useGotMessage } from "@/hooks/useGotMessage.ts";
 
 function App() {
-    const getToken = useSelector((state: RootState) => state.auth.isAuthenticated)
-    const dispatch = useDispatch()
-    const {isSuccess, isLoading} = useCheckTokenQuery()
+  const getToken = useSelector(
+    (state: RootState) => state.auth.isAuthenticated,
+  );
+  const dispatch = useDispatch();
+  const { isSuccess, isLoading } = useCheckTokenQuery();
 
-    useEffect(() => {
-        if (isSuccess) {
-            dispatch(login())
-        }
-    }, [isSuccess])
+  useEffect(() => {
+    if (isSuccess) {
+      dispatch(login());
+    }
+  }, [isSuccess]);
 
-    useGotMessage(isSuccess)
+  useGotMessage(isSuccess);
 
-    useEffect(() => {
-        if (getToken || isSuccess) {
-            socket.connect()
-        }
-    }, [getToken, isSuccess])
+  useEffect(() => {
+    if (getToken || isSuccess) {
+      socket.connect();
+    }
+  }, [getToken, isSuccess]);
 
-    useEffect(() => {
-        function onConnect() {
-            console.log('socket connected')
-        }
-        function onDisconnect() {
-            console.log('socket disconnected')
-        }
+  useEffect(() => {
+    function onConnect() {
+      console.log("socket connected");
+    }
+    function onDisconnect() {
+      console.log("socket disconnected");
+    }
 
-        socket.on('connect', onConnect)
-        socket.on('disconnect', onDisconnect)
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
 
-        return () => {
-            socket.off('connect', onConnect)
-            socket.off('disconnect', onDisconnect)
-        }
-    }, [])
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+    };
+  }, []);
 
-    if (isLoading) return <Spinner/>
+  if (isLoading) return <Spinner />;
 
-    return (
-        <>
-            <BrowserRouter>
-                <Routes>
-                    <Route path="/login" element={
-                        getToken ? <Navigate to="/tasks" replace/> : <LoginPage/>
-                    }/>
-                    <Route path="/register" element={
-                        getToken ? <Navigate to="/tasks" replace/> : <RegisterPage/>
-                    }/>
+  return (
+    <>
+      <BrowserRouter>
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              getToken ? <Navigate to="/tasks" replace /> : <LoginPage />
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              getToken ? <Navigate to="/tasks" replace /> : <RegisterPage />
+            }
+          />
 
-                    <Route element={<ProtectedRoute isAuthenticated={getToken || isSuccess}/>}>
-                        <Route path="/tasks" element={<TasksPage/>}/>
-                        <Route path="/tasks-help" element={<HelpPage/>}/>
-                        <Route path="/profile" element={<ProfilePage/>} />
-                    </Route>
+          <Route
+            element={<ProtectedRoute isAuthenticated={getToken || isSuccess} />}
+          >
+            <Route path="/tasks" element={<TasksPage />} />
+            <Route path="/tasks-help" element={<HelpPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+          </Route>
 
-                    <Route path="*" element={<Navigate to="/login" replace/>}/>
-                </Routes>
-            </BrowserRouter>
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </BrowserRouter>
 
-            {getToken && <ChatWidget />}
-        </>
-    )
+      {getToken && <ChatWidget />}
+    </>
+  );
 }
 
-export default App
+export default App;

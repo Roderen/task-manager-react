@@ -1,9 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, Send } from 'lucide-react'
-import { useGetMessagesQuery, useSendMessageMutation } from '@/api/messagesApi'
+import {useDeleteMessageMutation, useGetMessagesQuery, useSendMessageMutation} from '@/api/messagesApi'
 import { Spinner } from '@/components/ui/spinner'
 import { socket } from '@/hooks/useSocket'
 import {useGetUserQuery} from "@/api/usersApi.ts";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 type Props = {
     conversationId: number
@@ -19,6 +25,12 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
     const bottomRef = useRef<HTMLDivElement>(null)
     const [isTyping, setIsTyping] = useState(false)
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    const [deleteMessage] = useDeleteMessageMutation()
+
+    const handleDeleteMessage = (messageId: number) => {
+        deleteMessage({messageId: messageId})
+    }
 
     useEffect(() => {
         socket.emit('joinChat', { conversationId })
@@ -70,19 +82,46 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
                 ) : (
                     <div className="relative flex flex-col gap-2">
                         {allMessages.map((msg, i) => (
-                            <div
-                                key={msg.id ?? i}
-                                className={`max-w-[75%] px-3 py-2 rounded-2xl text-sm ${
-                                    msg.senderId === currentUser?.id
-                                        ? 'bg-black text-white self-start rounded-bl-sm'
-                                        : 'bg-gray-100 text-black self-end rounded-br-sm'
-                                }`}
-                            >
-                                {msg.text}
-                            </div>
+                            msg.deletedAt === null ? (
+                                <div
+                                    key={msg.id ?? i}
+                                    className={`group relative max-w-[75%] px-3 py-2 rounded-2xl text-sm flex items-center gap-1 ${
+                                        msg.senderId === currentUser?.id
+                                            ? 'bg-black text-white self-start rounded-bl-sm'
+                                            : 'bg-gray-100 text-black self-end rounded-br-sm'
+                                    }`}
+                                >
+                                    <span>{msg.text}</span>
+
+                                    {msg.senderId === currentUser?.id && (
+                                        <DropdownMenu modal={false}>
+                                            <DropdownMenuTrigger className="group-opacity-100 ml-1">
+                                                ⋮
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent>
+                                                <DropdownMenuItem>Edit</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleDeleteMessage(msg.id)}
+                                                                  className="text-red-500">Delete</DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    )}
+                                </div>
+                            ) : (
+                                <div
+                                    key={msg.id ?? i}
+                                    className={`group relative max-w-[75%] px-3 py-2 rounded-2xl text-sm flex items-center gap-1 ${
+                                        msg.senderId === currentUser?.id
+                                            ? 'bg-black text-gray-500 self-start rounded-bl-sm'
+                                            : 'bg-gray-100 text-gray-400 self-end rounded-br-sm'
+                                    }`}
+                                >
+                                    <span>Message deleted</span>
+                                </div>
+                            )
                         ))}
                         <div ref={bottomRef}/>
-                        {isTyping && <div className="absolute bottom-[-20px] self-end text-sm text-gray-400 px-1">typing...</div>}
+                        {isTyping && <div
+                            className="absolute bottom-[-20px] self-end text-sm text-gray-400 px-1">typing...</div>}
                     </div>
                 )}
             </div>
