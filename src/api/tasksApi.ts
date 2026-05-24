@@ -1,70 +1,78 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type {Task, TasksResponse} from "@/types/task.ts";
+import type { Task, TasksResponse } from "@/types/task.ts";
+
+interface PaginatedTasks {
+  data: Task[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
 
 export const tasksApi = createApi({
-    reducerPath: 'tasksApi',
-    tagTypes: ['Task'],
-    baseQuery: fetchBaseQuery({
-        baseUrl: import.meta.env.VITE_API_URL,
-        credentials: 'include',
+  reducerPath: 'tasksApi',
+  tagTypes: ['Task'],
+  baseQuery: fetchBaseQuery({
+    baseUrl: import.meta.env.VITE_API_URL,
+    credentials: 'include',
+  }),
+  endpoints: (builder) => ({
+    getTasks: builder.query<PaginatedTasks, { page: number, limit: number, completed?: boolean }>({
+      query: ({ page, limit, completed }) => ({
+        url: '/tasks',
+        method: 'GET',
+        params: { page, limit, completed }
+      }),
+      providesTags: ['Task'],
     }),
-    endpoints: (builder) => ({
-        getTasks: builder.query<{ data: Task[], total: number, page: number, limit: number, totalPages: number }, { page: number, limit: number, completed?: boolean }>({
-            query: ({ page, limit, completed }) => ({
-                url: '/tasks',
-                method: 'GET',
-                params: { page, limit, completed }
-            }),
-            providesTags: ['Task'],
-        }),
-        getHelpTasks: builder.query<TasksResponse, { page: number, limit: number }>({
-            query: ({ page, limit }) => ({
-                url: '/tasks/help',
-                method: 'GET',
-                params: { page, limit }
-            }),
-            providesTags: ['Task'],
-        }),
-        createTask: builder.mutation({
-            query(data) {
-                const { title } = data
-                return {
-                    url: "/tasks",
-                    method: 'POST',
-                    body: { title }
-                }
-            },
-            invalidatesTags: ['Task'],
-        }),
-        updateTask: builder.mutation({
-            query(data) {
-                const { id, completed, title, needsHelp } = data
-                return {
-                    url: `/tasks/${id}`,
-                    method: 'PUT',
-                    body: { completed, title, needsHelp }
-                }
-            },
-            invalidatesTags: ['Task'],
-        }),
-        deleteTask: builder.mutation({
-            query(data) {
-                const { id } = data
-                return {
-                    url: `/tasks/${id}`,
-                    method: 'DELETE',
-                }
-            },
-            invalidatesTags: ['Task'],
-        }),
-        getTasksCount: builder.query<{ total: number; completed: number; uncompleted: number }, void>({
-            query: () => ({
-                url: '/tasks/count',
-                method: 'GET'
-            }),
-            providesTags: ['Task'],
-        }),
+    getHelpTasks: builder.query<TasksResponse, { page: number, limit: number }>({
+      query: ({ page, limit }) => ({
+        url: '/tasks/help',
+        method: 'GET',
+        params: { page, limit }
+      }),
+      providesTags: ['Task'],
     }),
+    createTask: builder.mutation<Task, { title: string }>({
+      query(data) {
+        const { title } = data
+        return {
+          url: "/tasks",
+          method: 'POST',
+          body: { title }
+        }
+      },
+      invalidatesTags: ['Task'],
+    }),
+    updateTask: builder.mutation<Task | null, { id: number, completed?: boolean, title?: string, needsHelp?: boolean }>({
+      query(data) {
+        const { id, completed, title, needsHelp } = data
+        return {
+          url: `/tasks/${id}`,
+          method: 'PUT',
+          body: { completed, title, needsHelp }
+        }
+      },
+      invalidatesTags: ['Task'],
+    }),
+    deleteTask: builder.mutation<{ success: boolean }, { id: number }>({
+      query(data) {
+        const { id } = data
+        return {
+          url: `/tasks/${id}`,
+          method: 'DELETE',
+        }
+      },
+      invalidatesTags: ['Task'],
+    }),
+    getTasksCount: builder.query<{ total: number; completed: number; uncompleted: number }, void>({
+      query: () => ({
+        url: '/tasks/count',
+        method: 'GET'
+      }),
+      providesTags: ['Task'],
+    }),
+  }),
 })
 
 export const { useGetTasksQuery, useGetHelpTasksQuery, useCreateTaskMutation, useUpdateTaskMutation, useDeleteTaskMutation, useGetTasksCountQuery } = tasksApi
