@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import type { Message } from '@/types/messages'
 
 type Props = {
   conversationId: number
@@ -18,7 +19,7 @@ type Props = {
 
 const ChatWindow = ({ conversationId, onBack }: Props) => {
   const [text, setText] = useState('')
-  const [realtimeMessages, setRealtimeMessages] = useState<any[]>([])
+  const [realtimeMessages, setRealtimeMessages] = useState<Message[]>([])
   const { data: currentUser } = useGetUserQuery()
   const { data: getMessages, isLoading } = useGetMessagesQuery(conversationId)
   const [sendMessage] = useSendMessageMutation()
@@ -27,6 +28,7 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [editingMessage, setEditingMessage] = useState<{ id: number, text: string } | null>(null)
   const [editMessage] = useEditMessageMutation()
+  console.log(realtimeMessages)
 
   const [deleteMessage] = useDeleteMessageMutation()
 
@@ -43,7 +45,7 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
   useEffect(() => {
     socket.emit('joinChat', { conversationId })
 
-    function onNewMessage(message: any) {
+    function onNewMessage(message: Message) {
       setRealtimeMessages(prev => [...prev, message])
     }
 
@@ -99,7 +101,7 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
                     }`}
                 >
                   <span>{msg.text}</span>
-                  {msg.editedAt !== null ? (<div className='absolute text-[8px] bottom-[2px] right-[10px]'>Edited</div>): ''}
+                  {msg.editedAt !== null ? (<div className='absolute text-[8px] bottom-[2px] right-[10px]'>Edited</div>) : ''}
 
                   {msg.senderId === currentUser?.id && (
                     <DropdownMenu modal={false}>

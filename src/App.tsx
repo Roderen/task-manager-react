@@ -27,7 +27,7 @@ function App() {
     if (isSuccess) {
       dispatch(login());
     }
-  }, [isSuccess]);
+  }, [dispatch, isSuccess]);
 
   useGotMessage(isSuccess);
 

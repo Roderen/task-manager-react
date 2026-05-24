@@ -1,3 +1,4 @@
+import type { Conversation, Message } from '@/types/messages'
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
 export const messagesApi = createApi({
@@ -8,11 +9,11 @@ export const messagesApi = createApi({
   }),
   tagTypes: ['Conversations', 'Messages'],
   endpoints: (builder) => ({
-    getConversations: builder.query<any[], void>({
+    getConversations: builder.query<Conversation[], void>({
       query: () => '/messages/getConversations',
       providesTags: ['Conversations']
     }),
-    getMessages: builder.query<{ messages: any[], interlocutorLastReadMessageId: number }, number>({
+    getMessages: builder.query<{ messages: Message[], interlocutorLastReadMessageId: number }, number>({
       query: (conversationId) => `/messages/conversationGetMessages?conversationId=${conversationId}`,
       providesTags: ['Messages'],
       onQueryStarted: async (_, { dispatch, queryFulfilled }) => {
@@ -20,7 +21,7 @@ export const messagesApi = createApi({
         dispatch(messagesApi.util.invalidateTags(['Conversations']))
       }
     }),
-    sendMessage: builder.mutation<any, { conversationId: number, text: string }>({
+    sendMessage: builder.mutation<Message, { conversationId: number, text: string }>({
       query: (body) => ({
         url: '/messages/conversationSendMessage',
         method: 'POST',
@@ -34,14 +35,13 @@ export const messagesApi = createApi({
         body,
       }),
     }),
-    deleteMessage: builder.mutation({
+    deleteMessage: builder.mutation<Message, { messageId: number }>({
       query: (body) => ({
         url: `/messages/deleteConversationMessage/${body.messageId}`,
-        method: 'DELETE',
-        body
+        method: 'DELETE'
       })
     }),
-   editMessage: builder.mutation({
+    editMessage: builder.mutation<Message, { messageId: number, text: string }>({
       query: ({ messageId, text }) => ({
         url: `/messages/editConversationMessage/${messageId}`,
         method: 'PUT',
