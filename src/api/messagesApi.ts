@@ -6,12 +6,18 @@ export const messagesApi = createApi({
         baseUrl: import.meta.env.VITE_API_URL,
         credentials: 'include',
     }),
+    tagTypes: ['Conversations'],
     endpoints: (builder) => ({
         getConversations: builder.query<any[], void>({
             query: () => '/messages/getConversations',
+            providesTags: ['Conversations']
         }),
-        getMessages: builder.query<any[], number>({
+        getMessages: builder.query<{ messages: any[], interlocutorLastReadMessageId: number }, number>({
             query: (conversationId) => `/messages/conversationGetMessages?conversationId=${conversationId}`,
+            onQueryStarted: async (_, { dispatch, queryFulfilled }) => {
+                await queryFulfilled
+                dispatch(messagesApi.util.invalidateTags(['Conversations']))
+            }
         }),
         sendMessage: builder.mutation<any, { conversationId: number, text: string }>({
             query: (body) => ({
@@ -27,6 +33,13 @@ export const messagesApi = createApi({
                 body,
             }),
         }),
+        deleteMessage: builder.mutation({
+            query: (body) => ({
+                url: `/messages/deleteConversationMessage/${body.messageId}`,
+                method: 'DELETE',
+                body
+            })
+        })
     }),
 })
 
@@ -35,4 +48,5 @@ export const {
     useGetMessagesQuery,
     useSendMessageMutation,
     useCreateConversationMutation,
+    useDeleteMessageMutation,
 } = messagesApi
