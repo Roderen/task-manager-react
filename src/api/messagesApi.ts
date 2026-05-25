@@ -39,7 +39,8 @@ export const messagesApi = createApi({
       query: (body) => ({
         url: `/messages/deleteConversationMessage/${body.messageId}`,
         method: 'DELETE'
-      })
+      }),
+      invalidatesTags: ['Messages'],
     }),
     editMessage: builder.mutation<Message, { messageId: number, text: string }>({
       query: ({ messageId, text }) => ({
