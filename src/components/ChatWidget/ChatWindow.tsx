@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, Send } from 'lucide-react'
-import { useDeleteMessageMutation, useEditMessageMutation, useGetMessagesQuery, useSendMessageMutation } from '@/api/messagesApi'
+import { messagesApi, useDeleteMessageMutation, useEditMessageMutation, useGetMessagesQuery, useSendMessageMutation } from '@/api/messagesApi'
 import { Spinner } from '@/components/ui/spinner'
 import { socket } from '@/hooks/useSocket'
 import { useGetUserQuery } from "@/api/usersApi.ts";
@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import type { Message } from '@/types/messages'
+import { useAppDispatch } from '@/store/store'
 
 type Props = {
   conversationId: number
@@ -28,12 +29,20 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [editingMessage, setEditingMessage] = useState<{ id: number, text: string } | null>(null)
   const [editMessage] = useEditMessageMutation()
-  console.log(realtimeMessages)
+  const dispatch = useAppDispatch()
 
   const [deleteMessage] = useDeleteMessageMutation()
 
   const handleEdit = async () => {
     if (!editingMessage) return
+
+    setRealtimeMessages(prev =>
+      prev.map(msg => msg.id === editingMessage.id
+        ? { ...msg, text: editingMessage.text, editedAt: new Date().toISOString() }
+        : msg
+      )
+    )
+
     await editMessage({ messageId: editingMessage.id, text: editingMessage.text })
     setEditingMessage(null)
   }
@@ -55,13 +64,36 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
       typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 2000)
     }
 
+    function onStopTyping() {
+      setIsTyping(false)
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+    }
+
+    function onMessageEdited(message: Message) {
+      dispatch(
+        messagesApi.util.updateQueryData('getMessages', conversationId, (draft) => {
+          const index = draft.messages.findIndex(msg => msg.id === message.id)
+          if (index !== -1) {
+            draft.messages[index] = message
+          }
+        })
+      )
+      setRealtimeMessages(prev =>
+        prev.map(msg => msg.id === message.id ? message : msg)
+      )
+    }
+
     socket.on('newMessage', onNewMessage)
     socket.on('userTyping', onUserTyping)
+    socket.on('stopTyping', onStopTyping)
+    socket.on('messageEdited', onMessageEdited)
     return () => {
       socket.off('newMessage', onNewMessage)
       socket.off('userTyping', onUserTyping)
+      socket.off('stopTyping', onStopTyping)
+      socket.off('messageEdited', onMessageEdited)
     }
-  }, [conversationId])
+  }, [conversationId, dispatch])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -95,7 +127,7 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
               msg.deletedAt === null ? (
                 <div
                   key={msg.id ?? i}
-                  className={`group relative max-w-[75%] px-3 py-3 rounded-2xl text-sm flex items-center gap-1 ${msg.senderId === currentUser?.id
+                  className={`group relative min-w-[17%] max-w-[75%] px-3 py-3 rounded-2xl text-sm flex items-center gap-1 ${msg.senderId === currentUser?.id
                     ? 'bg-black text-white self-start rounded-bl-sm'
                     : 'bg-gray-100 text-black self-end rounded-br-sm'
                     }`}
