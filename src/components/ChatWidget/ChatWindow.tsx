@@ -95,10 +95,6 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
     }
   }, [conversationId, dispatch])
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [getMessages, realtimeMessages])
-
   const allMessages = [...(getMessages?.messages ?? []), ...realtimeMessages]
 
   const handleSend = async () => {
