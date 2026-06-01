@@ -1,6 +1,13 @@
 import type { Conversation, Message } from '@/types/messages'
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
+type MessagesResponse = {
+  messages: Message[]
+  interlocutorLastReadMessageId: number
+  nextCursor: number | null
+  interlocutorMember: any
+}
+
 export const messagesApi = createApi({
   reducerPath: 'messagesApi',
   baseQuery: fetchBaseQuery({
@@ -13,13 +20,24 @@ export const messagesApi = createApi({
       query: () => '/messages/getConversations',
       providesTags: ['Conversations']
     }),
-    getMessages: builder.query<{ messages: Message[], interlocutorLastReadMessageId: number }, number>({
-      query: (conversationId) => `/messages/conversationGetMessages?conversationId=${conversationId}`,
+    getMessages: builder.infiniteQuery<MessagesResponse, number, number | null>({
+      infiniteQueryOptions: {
+        initialPageParam: null as number | null,
+        getNextPageParam: (lastPage: MessagesResponse) => lastPage.nextCursor ?? undefined,
+      },
+      query: ({ queryArg: conversationId, pageParam }) => ({
+        url: `/messages/conversationGetMessages`,
+        params: {
+          conversationId,
+          cursor: pageParam ?? undefined,
+          limit: 20,
+        },
+      }),
       providesTags: ['Messages'],
       onQueryStarted: async (_, { dispatch, queryFulfilled }) => {
         await queryFulfilled
         dispatch(messagesApi.util.invalidateTags(['Conversations']))
-      }
+      },
     }),
     sendMessage: builder.mutation<Message, { conversationId: number, text: string }>({
       query: (body) => ({
@@ -50,14 +68,23 @@ export const messagesApi = createApi({
       }),
       invalidatesTags: ['Messages'],
     }),
+    markAsRead: builder.mutation<void, { conversationId: number, messageId: number }>({
+      query: (body) => ({
+        url: '/messages/markAsRead',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Conversations'], // ← добавь
+    }),
   }),
 })
 
 export const {
   useGetConversationsQuery,
-  useGetMessagesQuery,
+  useGetMessagesInfiniteQuery,
   useSendMessageMutation,
   useCreateConversationMutation,
   useDeleteMessageMutation,
-  useEditMessageMutation
+  useEditMessageMutation,
+  useMarkAsReadMutation
 } = messagesApi

@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, Send } from 'lucide-react'
-import { messagesApi, useDeleteMessageMutation, useEditMessageMutation, useGetMessagesQuery, useSendMessageMutation } from '@/api/messagesApi'
+import { messagesApi, useDeleteMessageMutation, useEditMessageMutation, useGetMessagesInfiniteQuery, useMarkAsReadMutation, useSendMessageMutation } from '@/api/messagesApi'
 import { Spinner } from '@/components/ui/spinner'
 import { socket } from '@/hooks/useSocket'
-import { useGetUserQuery } from "@/api/usersApi.ts";
+import { useGetUserQuery } from "@/api/usersApi.ts"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,33 +22,51 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
   const [text, setText] = useState('')
   const [realtimeMessages, setRealtimeMessages] = useState<Message[]>([])
   const { data: currentUser } = useGetUserQuery()
-  const { data: getMessages, isLoading } = useGetMessagesQuery(conversationId)
+  const { data, isLoading, isFetching, hasNextPage, fetchNextPage } =
+    useGetMessagesInfiniteQuery(conversationId)
   const [sendMessage] = useSendMessageMutation()
+  const [markAsRead] = useMarkAsReadMutation()
   const bottomRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
+  const topRef = useRef<HTMLDivElement>(null)
   const [isTyping, setIsTyping] = useState(false)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [editingMessage, setEditingMessage] = useState<{ id: number, text: string } | null>(null)
   const [editMessage] = useEditMessageMutation()
-  const dispatch = useAppDispatch()
-
   const [deleteMessage] = useDeleteMessageMutation()
+  const dispatch = useAppDispatch()
 
   const handleEdit = async () => {
     if (!editingMessage) return
-
     setRealtimeMessages(prev =>
       prev.map(msg => msg.id === editingMessage.id
         ? { ...msg, text: editingMessage.text, editedAt: new Date().toISOString() }
         : msg
       )
     )
-
     await editMessage({ messageId: editingMessage.id, text: editingMessage.text })
     setEditingMessage(null)
   }
 
+  const allMessages = [
+    ...(data?.pages.slice().reverse().flatMap(page => page.messages) ?? []),
+    ...realtimeMessages
+  ]
+
+  useEffect(() => {
+    if (!isLoading) {
+      bottomRef.current?.scrollIntoView()
+      const pages = data?.pages
+      const lastPage = pages?.[pages.length - 1]
+      const lastMessage = lastPage?.messages?.[lastPage.messages.length - 1]
+      if (lastMessage) {
+        markAsRead({ conversationId, messageId: lastMessage.id })
+      }
+    }
+  }, [conversationId, data?.pages, isLoading, markAsRead])
+
   const handleDeleteMessage = (messageId: number) => {
-    deleteMessage({ messageId: messageId })
+    deleteMessage({ messageId })
   }
 
   useEffect(() => {
@@ -72,9 +90,12 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
     function onMessageEdited(message: Message) {
       dispatch(
         messagesApi.util.updateQueryData('getMessages', conversationId, (draft) => {
-          const index = draft.messages.findIndex(msg => msg.id === message.id)
-          if (index !== -1) {
-            draft.messages[index] = message
+          for (const page of draft.pages) {
+            const index = page.messages.findIndex((msg: Message) => msg.id === message.id)
+            if (index !== -1) {
+              page.messages[index] = message
+              break
+            }
           }
         })
       )
@@ -95,16 +116,51 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
     }
   }, [conversationId, dispatch])
 
+  // Скролл вниз при первой загрузке
   useEffect(() => {
-    bottomRef.current?.scrollIntoView()
-  }, [getMessages, realtimeMessages])
+    if (!isLoading) {
+      bottomRef.current?.scrollIntoView()
+    }
+  }, [isLoading])
 
-  const allMessages = [...(getMessages?.messages ?? []), ...realtimeMessages]
+  // Observer для подгрузки старых сообщений
+  useEffect(() => {
+    if (isLoading) return
+    const timer = setTimeout(() => {
+      const observer = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting && hasNextPage && !isFetching) {
+          const prevHeight = listRef.current?.scrollHeight ?? 0
+          fetchNextPage().then(() => {
+            requestAnimationFrame(() => {
+              const newHeight = listRef.current?.scrollHeight ?? 0
+              listRef.current?.scrollTo({ top: newHeight - prevHeight })
+            })
+          })
+        }
+      })
+      if (topRef.current) observer.observe(topRef.current)
+      return () => observer.disconnect()
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [hasNextPage, isFetching, isLoading, fetchNextPage])
+
+  useEffect(() => {
+    if (!isLoading) {
+      bottomRef.current?.scrollIntoView()
+      const pages = data?.pages
+      const lastPage = pages?.[pages.length - 1]
+      const lastMessage = lastPage?.messages?.[lastPage.messages.length - 1]
+      if (lastMessage) {
+        markAsRead({ conversationId, messageId: lastMessage.id })
+      }
+    }
+  }, [conversationId, data?.pages, isLoading, markAsRead])
 
   const handleSend = async () => {
     if (!text.trim()) return
     await sendMessage({ conversationId, text })
     setText('')
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
   return (
@@ -116,13 +172,14 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
         <span className="font-medium text-sm">Chat #{conversationId}</span>
       </div>
 
-      <div className="flex-1 overflow-y-auto pt-4 pb-6 px-6 flex flex-col gap-2">
+      <div ref={listRef} className="flex-1 overflow-y-auto pt-4 pb-6 px-6 flex flex-col gap-2">
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
             <Spinner className="size-6" />
           </div>
         ) : (
-          <div className="relative flex flex-col gap-2">
+          <div className="relative flex flex-col g[118;1:3uap-2">
+            {hasNextPage && <div ref={topRef} />}
             {allMessages.map((msg, i) => (
               msg.deletedAt === null ? (
                 <div
@@ -133,8 +190,9 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
                     }`}
                 >
                   <span>{msg.text}</span>
-                  {msg.editedAt !== null ? (<div className='absolute text-[8px] bottom-[2px] right-[10px]'>Edited</div>) : ''}
-
+                  {msg.editedAt !== null ? (
+                    <div className='absolute text-[8px] bottom-[2px] right-[10px]'>Edited</div>
+                  ) : ''}
                   {msg.senderId === currentUser?.id && (
                     <DropdownMenu modal={false}>
                       <DropdownMenuTrigger className="group-opacity-100 ml-1">
@@ -144,8 +202,12 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
                         <DropdownMenuItem onClick={() => setEditingMessage({ id: msg.id, text: msg.text })}>
                           Редактировать
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDeleteMessage(msg.id)}
-                          className="text-red-500">Delete</DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteMessage(msg.id)}
+                          className="text-red-500"
+                        >
+                          Delete
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
@@ -163,8 +225,11 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
               )
             ))}
             <div ref={bottomRef} />
-            {isTyping && <div
-              className="absolute bottom-[-20px] self-end text-sm text-gray-400 px-1">typing...</div>}
+            {isTyping && (
+              <div className="absolute bottom-[-20px] self-end text-sm text-gray-400 px-1">
+                typing...
+              </div>
+            )}
           </div>
         )}
       </div>
