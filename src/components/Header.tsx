@@ -8,6 +8,7 @@ import { LogOutIcon, UserIcon, UserRound } from "lucide-react";
 import { useGetUserQuery, usersApi } from "@/api/usersApi.ts";
 import { toast } from "sonner";
 import { socket } from "@/hooks/useSocket.ts";
+import { messagesApi } from '@/api/messagesApi';
 
 type HeaderProps = {
   onNewTask?: () => void
@@ -23,6 +24,7 @@ const Header = ({ onNewTask }: HeaderProps) => {
     await logout()
     dispatch(logoutAction())
     dispatch(usersApi.util.resetApiState())
+    dispatch(messagesApi.util.resetApiState())
     socket.disconnect()
     navigate("/login")
     toast.info("You have logged out!");
