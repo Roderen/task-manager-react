@@ -6,6 +6,7 @@ import { tasksApi } from "@/api/tasksApi.ts";
 import { usersApi } from "@/api/usersApi.ts";
 import { useDispatch } from "react-redux";
 import { messagesApi } from "@/api/messagesApi.ts";
+import onlineReducer from "./onlineSlice";
 
 export const store = configureStore({
   reducer: {
@@ -15,13 +16,14 @@ export const store = configureStore({
     [tasksApi.reducerPath]: tasksApi.reducer,
     [usersApi.reducerPath]: usersApi.reducer,
     [messagesApi.reducerPath]: messagesApi.reducer,
+    online: onlineReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
       authApi.middleware,
       tasksApi.middleware,
       usersApi.middleware,
-      messagesApi.middleware
+      messagesApi.middleware,
     ),
 });
 
