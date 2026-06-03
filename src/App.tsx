@@ -15,6 +15,7 @@ import HelpPage from "@/pages/HelpPage";
 import { socket } from "@/hooks/useSocket.ts";
 import ChatWidget from "@/components/ChatWidget";
 import { useGotMessage } from "@/hooks/useGotMessage.ts";
+import { setUserOffline, setUserOnline } from "./store/onlineSlice.ts";
 
 function App() {
   const getToken = useSelector(
@@ -48,11 +49,19 @@ function App() {
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
 
+
+    socket.on('userOnline', ({ userId }) => {
+      dispatch(setUserOnline(userId))
+    })
+    socket.on('userOffline', ({ userId }) => dispatch(setUserOffline(userId)))
+
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
+      socket.off('userOnline')
+      socket.off('userOffline')
     };
-  }, []);
+  }, [dispatch]);
 
   if (isLoading) return <Spinner />;
 
