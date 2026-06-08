@@ -178,7 +178,7 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
             <Spinner className="size-6" />
           </div>
         ) : (
-          <div className="relative flex flex-col g[118;1:3uap-2">
+          <div className="relative flex flex-col gap-2">
             {hasNextPage && <div ref={topRef} />}
             {allMessages.map((msg, i) => (
               msg.deletedAt === null ? (
@@ -189,7 +189,7 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
                     : 'bg-gray-100 text-black self-end rounded-br-sm'
                     }`}
                 >
-                  <span>{msg.text}</span>
+                  <span className="break-all">{msg.text}</span>
                   {msg.editedAt !== null ? (
                     <div className='absolute text-[8px] bottom-[2px] right-[10px]'>Edited</div>
                   ) : ''}
