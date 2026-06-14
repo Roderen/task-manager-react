@@ -8,6 +8,7 @@ import { useDebounce } from "@/hooks/useDebaunce.ts";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { useGetUserQuery } from "@/api/usersApi.ts";
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 const TasksPage = () => {
   const [filter, setFilter] = useState<'uncompleted' | 'completed'>('uncompleted')
@@ -65,39 +66,39 @@ const TasksPage = () => {
       <div className="container mx-auto px-8 py-8">
         <SearchTask value={search} onChange={setSearch} />
 
-        <div className="flex justify-between items-center gap-3 mb-6">
-          <div className="flex gap-4">
+        <div className="flex flex-col min-[430px]:flex-row justify-between items-center gap-2 min-[430px]:gap-3 mb-6">
+          <div className="flex flex-col min-[430px]:flex-row gap-2 min-[430px]:gap-4">
             <button
               onClick={() => setFilter('uncompleted')}
-              className={`cursor-pointer px-4 py-2 rounded-lg font-medium ${filter === 'uncompleted' ? 'bg-black text-white' : 'text-gray-500'}`}
+              className={`text-xs sm:text-base cursor-pointer px-4 py-2 rounded-lg font-medium ${filter === 'uncompleted' ? 'bg-black text-white' : 'text-gray-500'}`}
             >
               Uncompleted
             </button>
             <button
               onClick={() => setFilter('completed')}
-              className={`cursor-pointer px-4 py-2 rounded-lg font-medium ${filter === 'completed' ? 'bg-black text-white' : 'text-gray-500'}`}
+              className={`text-xs sm:text-base cursor-pointer px-4 py-2 rounded-lg font-medium ${filter === 'completed' ? 'bg-black text-white' : 'text-gray-500'}`}
             >
               Completed
             </button>
           </div>
           <div>
-            <Link to="/tasks-help" className="cursor-pointer px-4 py-2 rounded-lg font-medium text-gray-500">Need Help</Link>
+            <Link to="/tasks-help" className="text-xs sm:text-base cursor-pointer px-4 py-2 rounded-lg font-medium text-gray-500">Need Help</Link>
           </div>
         </div>
 
         {showNewTask && (
-          <form className="flex gap-3 mb-6" onSubmit={handleSubmit}>
+          <form className="flex flex-col min-[430px]:flex-row gap-2 min-[430px]:gap-3 mb-6" onSubmit={handleSubmit}>
             <input
               type="text"
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
               placeholder="Task title..."
-              className="flex-1 border rounded-lg px-4 py-2"
+              className="flex-1 border rounded-lg px-4 py-2 text-sm sm:text-base"
               required
             />
-            <button type="submit" className="bg-black text-white px-4 py-2 rounded-lg">Add</button>
+            <button type="submit" className="bg-black text-white px-4 py-2 rounded-lg text-sm sm:text-base">Add</button>
             <button type="button" onClick={() => setShowNewTask(false)}
-              className="text-gray-500 px-4 py-2">Cancel
+              className="text-gray-500 px-4 py-1 text-sm sm:text-base">Cancel
             </button>
           </form>
         )}
@@ -133,30 +134,17 @@ const TasksPage = () => {
               <button
                 onClick={() => setPage(prev => Math.max(prev - 1, 1))}
                 disabled={page === 1}
-                className="px-4 py-2 rounded-lg border disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-4 py-2 rounded-lg border disabled:opacity-20 disabled:cursor-not-allowed hover:bg-gray-50"
               >
-                Previous
+                <ArrowLeft size={20} />
               </button>
-
-              {Array.from({ length: tasks.totalPages }, (_, i) => i + 1)
-                .filter(p => p >= page - 1 && p <= page + 2)
-                .map(p => (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    className={`px-4 py-2 rounded-lg border ${page === p ? 'bg-black text-white' : 'hover:bg-gray-50'}`}
-                  >
-                    {p}
-                  </button>
-                ))
-              }
 
               <button
                 onClick={() => setPage(prev => Math.min(prev + 1, tasks.totalPages))}
                 disabled={page === tasks.totalPages}
-                className="px-4 py-2 rounded-lg border disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-4 py-2 rounded-lg border disabled:opacity-20 disabled:cursor-not-allowed hover:bg-gray-50"
               >
-                Next
+                <ArrowRight size={20} />
               </button>
             </div>
           )}
