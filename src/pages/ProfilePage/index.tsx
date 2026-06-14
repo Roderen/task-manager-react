@@ -172,16 +172,16 @@ const ProfilePage = () => {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4 w-full text-center">
             <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-2xl font-bold">{count?.total ?? 0}</p>
-              <p className="text-xs text-gray-500 mt-1">Total</p>
+              <p className="text-xl sm:text-2xl font-bold">{count?.total ?? 0}</p>
+              <p className="text-[9px] sm:text-xs text-gray-500 mt-1">Total</p>
             </div>
             <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-2xl font-bold text-green-600">{count?.completed ?? 0}</p>
-              <p className="text-xs text-gray-500 mt-1">Completed</p>
+              <p className="text-xl sm:text-2xl font-bold text-green-600">{count?.completed ?? 0}</p>
+              <p className="text-[9px] sm:text-xs text-gray-500 mt-1">Completed</p>
             </div>
             <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-2xl font-bold text-orange-500">{count?.uncompleted ?? 0}</p>
-              <p className="text-xs text-gray-500 mt-1">Uncompleted</p>
+              <p className="text-xl sm:text-2xl font-bold text-orange-500">{count?.uncompleted ?? 0}</p>
+              <p className="text-[9px] sm:text-xs text-gray-500 mt-1">Uncompleted</p>
             </div>
           </div>
 

@@ -74,12 +74,12 @@ const TaskItem = ({
                   type="checkbox"
                   checked={completed}
                   onChange={() => onToggle(id, !completed)}
-                  className="w-5 h-5 cursor-pointer"
+                  className="w-4 h-4 min-[430px]:w-5 min-[430px]:h-5 cursor-pointer"
                 />
               </>
               }
               <span
-                className={completed ? 'line-through text-gray-400 mr-1' : 'font-medium mr-1'}>{title}</span>
+                className={completed ? 'text-xs min-[430px]:text-base line-through text-gray-400 mr-1' : 'text-xs min-[430px]:text-base text-sm font-medium mr-1'}>{title}</span>
             </div>
             <div className="mt-2">
               <p className="text-[14px]">{new Date(createdAt).toLocaleDateString()}</p>
@@ -89,7 +89,7 @@ const TaskItem = ({
         }
       </div>
       {isOwner && (
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
           {!completed ? (
             <button className="cursor-pointer underline" onClick={async () => {
               await onEdit(id, undefined, !needsHelp)
