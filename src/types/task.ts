@@ -4,6 +4,7 @@ export interface Task {
     title: string
     needsHelp: boolean
     completed: boolean
+    search: string
     createdAt: Date
 }
 

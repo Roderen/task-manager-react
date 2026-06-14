@@ -17,11 +17,11 @@ export const tasksApi = createApi({
     credentials: 'include',
   }),
   endpoints: (builder) => ({
-    getTasks: builder.query<PaginatedTasks, { page: number, limit: number, completed?: boolean }>({
-      query: ({ page, limit, completed }) => ({
+    getTasks: builder.query<PaginatedTasks, { page: number, limit: number, completed?: boolean, search?: string }>({
+      query: ({ page, limit, completed, search }) => ({
         url: '/tasks',
         method: 'GET',
-        params: { page, limit, completed }
+        params: { page, limit, completed, search }
       }),
       providesTags: ['Task'],
     }),

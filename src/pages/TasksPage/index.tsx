@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Header from '@/components/Header'
 import TaskItem from '@/components/TaskItem'
 import { useCreateTaskMutation, useDeleteTaskMutation, useGetTasksQuery, useUpdateTaskMutation } from "@/api/tasksApi.ts";
@@ -24,15 +24,18 @@ const TasksPage = () => {
   const { data: tasks, isLoading } = useGetTasksQuery({
     page,
     limit,
-    completed: filter === 'completed'
+    completed: filter === 'completed',
+    search: debouncedSearch || undefined,
   })
   const [createTask] = useCreateTaskMutation({})
   const [deleteTask] = useDeleteTaskMutation({})
   const [updateTask] = useUpdateTaskMutation({})
 
-  const filteredTasks = tasks?.data?.filter(task =>
-    task.title.toLowerCase().includes(debouncedSearch.toLowerCase())
-  ) ?? []
+  const filteredTasks = tasks?.data ?? []
+
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedSearch])
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
