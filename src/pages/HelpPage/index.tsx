@@ -49,6 +49,7 @@ const HelpPage = () => {
                 userId={task.userId}
                 currentUserId={currentUser?.id}
                 needsHelp={task.needsHelp}
+                userEmail={task.user.email}
                 title={task.title}
                 completed={task.completed}
                 onToggle={() => handleUpdateTask(task.id, task.completed)}
