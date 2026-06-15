@@ -121,6 +121,7 @@ const TasksPage = () => {
                 needsHelp={task.needsHelp}
                 title={task.title}
                 completed={task.completed}
+                userEmail={task.user.email}
                 onToggle={() => handleUpdateTask(task.id, task.completed)}
                 onDelete={() => handleDeleteTask(task.id)}
                 onEdit={(id, title, needsHelp) => handleUpdateTitle(id, title, needsHelp)}

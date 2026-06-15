@@ -1,139 +1,114 @@
-import { Check, HandHelping, MessageCircleMore, Pencil, Trash2 } from "lucide-react";
+import { MessageCircleMore, HandHelping, Trash2 } from "lucide-react";
 import { useState } from "react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger
+  AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
 } from "@/components/ui/alert-dialog.tsx";
 import { setActiveConversation, toggleChat } from "@/store/chatSlice.ts";
 import { useDispatch } from "react-redux";
 import { useCreateConversationMutation } from "@/api/messagesApi.ts";
+import TaskPopup from "./TaskPopup";
 
 type TaskItemProps = {
-  id: number,
-  userId: number,
-  currentUserId?: number,
-  needsHelp?: boolean,
-  title: string,
-  completed: boolean,
-  onToggle: (id: number, completed: boolean) => void,
-  onDelete: (id: number) => void,
-  onEdit: (id: number, title?: string, needsHelp?: boolean) => Promise<void>,
+  id: number
+  userId: number
+  currentUserId?: number
+  needsHelp?: boolean
+  title: string
+  completed: boolean
+  description?: string
+  userEmail: string
+  onToggle: (id: number, completed: boolean) => void
+  onDelete: (id: number) => void
+  onEdit: (id: number, title?: string, needsHelp?: boolean, description?: string) => Promise<void>
   createdAt: Date
 }
 
 const TaskItem = ({
-  id,
-  userId,
-  currentUserId,
-  title,
-  needsHelp,
-  completed,
-  onToggle,
-  onDelete,
-  onEdit,
-  createdAt
+  id, userId, currentUserId, title, needsHelp,
+  completed, description, userEmail, onToggle, onDelete, onEdit, createdAt
 }: TaskItemProps) => {
   const isOwner = currentUserId === userId
-  const [isEditing, setIsEditing] = useState<boolean>(false)
-  const [editTitle, setEditTitle] = useState(title)
+  const [isPopupOpen, setIsPopupOpen] = useState(false)
   const dispatch = useDispatch()
   const [createConversation] = useCreateConversationMutation()
 
   return (
-    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-      <div className="flex items-center gap-3">
-        {isEditing ? (
-          <>
-            <button onClick={async () => {
-              await onEdit(id, editTitle)
-              setIsEditing(false)
-            }}>
-              <Check size={16} />
-            </button>
-            <input
-              type="text"
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              className="flex-1 border rounded-lg px-4 py-1 max-w-[85%]"
-            />
-          </>
-        ) : (
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              {isOwner && <>
-                <button onClick={() => {
-                  setIsEditing(true)
-                  setEditTitle(title)
-                }}>
-                  <Pencil size={16} />
-                </button>
-                <input
-                  type="checkbox"
-                  checked={completed}
-                  onChange={() => onToggle(id, !completed)}
-                  className="w-4 h-4 min-[430px]:w-5 min-[430px]:h-5 cursor-pointer"
-                />
-              </>
-              }
-              <span
-                className={completed ? 'text-xs min-[430px]:text-base line-through text-gray-400 mr-1' : 'text-xs min-[430px]:text-base text-sm font-medium mr-1'}>{title}</span>
-            </div>
-            <div className="mt-2">
-              <p className="text-[14px]">{new Date(createdAt).toLocaleDateString()}</p>
-            </div>
-          </div>
-        )
-        }
-      </div>
-      {isOwner && (
-        <div className="flex items-center gap-4">
-          {!completed ? (
-            <button className="cursor-pointer underline" onClick={async () => {
-              await onEdit(id, undefined, !needsHelp)
-            }}>
-              {needsHelp ? (
-                <div className="flex align-center gap-1">
-                  <HandHelping size={24} />
-                  <span>(Cancel)</span>
-                </div>
-              ) : <HandHelping size={24} />}
-            </button>
-          ) : ''}
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <button className="text-red-400 hover:text-red-600 text-sm"><Trash2 size={20} /></button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onDelete(id)}>Delete</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+    <>
+      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div
+          className="flex flex-col cursor-pointer flex-1"
+          onClick={() => setIsPopupOpen(true)}
+        >
+          <span className={completed ? 'text-xs min-[430px]:text-base line-through text-gray-400' : 'text-xs min-[430px]:text-base font-medium'}>
+            {title}
+          </span>
+          <p className="text-[14px] mt-2">{new Date(createdAt).toLocaleDateString()}</p>
         </div>
-      )}
 
-      {!isOwner && (
-        <button className="cursor-pointer" onClick={async () => {
-          const result = await createConversation({ receiverId: userId })
-          if ('data' in result && result.data) {
-            dispatch(toggleChat())
-            dispatch(setActiveConversation(result.data.conversationId))
-          }
-        }}>
-          <MessageCircleMore size={24} />
-        </button>
-      )}
-    </div>
+        <div className="flex items-center gap-4">
+          {isOwner && (
+            <>
+              {!completed && (
+                <button className="cursor-pointer underline" onClick={() => onEdit(id, undefined, !needsHelp)}>
+                  {needsHelp ? (
+                    <div className="flex items-center gap-1">
+                      <HandHelping size={24} />
+                      <span className="text-sm">(Cancel)</span>
+                    </div>
+                  ) : <HandHelping size={24} />}
+                </button>
+              )}
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button className="text-red-400 hover:text-red-600"><Trash2 size={20} /></button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => onDelete(id)}>Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
+          )}
+
+          {!isOwner && (
+            <button className="cursor-pointer" onClick={async () => {
+              const result = await createConversation({ receiverId: userId })
+              if ('data' in result && result.data) {
+                dispatch(toggleChat())
+                dispatch(setActiveConversation(result.data.conversationId))
+              }
+            }}>
+              <MessageCircleMore size={24} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      <TaskPopup
+        isOpen={isPopupOpen}
+        onClose={() => setIsPopupOpen(false)}
+        id={id}
+        title={title}
+        description={description}
+        completed={completed}
+        needsHelp={needsHelp}
+        userEmail={userEmail}
+        createdAt={createdAt}
+        isOwner={isOwner}
+        onToggle={onToggle}
+        onDelete={onDelete}
+        onEdit={onEdit}
+      />
+    </>
   )
 }
 
