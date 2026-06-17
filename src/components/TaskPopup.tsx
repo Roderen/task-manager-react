@@ -35,7 +35,6 @@ const TaskPopup = ({
   const handleSave = async () => {
     await onEdit(id, editTitle, needsHelp, editDescription)
     setIsEditing(false)
-    onClose()
   }
 
   const handleCancel = () => {
@@ -60,13 +59,13 @@ const TaskPopup = ({
             {isOwner && !isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="flex items-center gap-1 text-sm text-gray-500 hover:text-black transition-colors"
+                className="cursor-pointer flex items-center gap-1 text-sm text-gray-500 hover:text-black transition-colors"
               >
                 <Pencil size={16} />
                 Edit
               </button>
             )}
-            <button onClick={onClose}><X size={20} /></button>
+            <button className="cursor-pointer" onClick={onClose}><X size={20} /></button>
           </div>
         </div>
 
@@ -127,7 +126,7 @@ const TaskPopup = ({
               {!completed && (
                 <button
                   onClick={() => onEdit(id, undefined, !needsHelp)}
-                  className="flex items-center gap-1 text-sm underline"
+                  className="cursor-pointer flex items-center gap-1 text-sm underline"
                 >
                   <HandHelping size={18} />
                   {needsHelp ? 'Cancel help request' : 'Ask for help'}
@@ -136,7 +135,7 @@ const TaskPopup = ({
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <button className="text-red-400 hover:text-red-600 flex items-center gap-1 text-sm">
+                  <button className="cursor-pointer text-red-400 hover:text-red-600 flex items-center gap-1 text-sm">
                     <Trash2 size={18} />
                     Delete
                   </button>
