@@ -49,12 +49,12 @@ const TaskPopup = ({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl p-8 w-full min-w-[900px] max-w-[900px] mx-4 flex flex-col gap-6"
+        className="bg-white rounded-2xl p-8 w-full w-[100%] max-w-[900px] mx-4 flex flex-col gap-6"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h2 className="font-semibold text-xl">{userEmail}</h2>
+          <h2 className="font-semibold text-md sm:text-xl">{userEmail}</h2>
           <div className="flex items-center gap-3">
             {isOwner && !isEditing && (
               <button
@@ -102,8 +102,7 @@ const TaskPopup = ({
         </div>
 
         {/* Meta */}
-        <div className="flex gap-6 text-sm text-gray-400">
-          <span>Created by: <span className="text-gray-600">{userEmail}</span></span>
+        <div className="flex flex-col gap-1 text-sm text-gray-400">
           <span>Created at: <span className="text-gray-600">{new Date(createdAt).toLocaleDateString()}</span></span>
         </div>
 
@@ -121,7 +120,7 @@ const TaskPopup = ({
 
         {/* Footer */}
         {isOwner && (
-          <div className="flex justify-between items-center pt-2 border-t">
+          <div className="flex justify-between items-center pt-5 border-t">
             <div className="flex items-center gap-4">
               {!completed && (
                 <button
