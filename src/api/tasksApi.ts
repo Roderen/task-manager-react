@@ -33,13 +33,13 @@ export const tasksApi = createApi({
       }),
       providesTags: ['Task'],
     }),
-    createTask: builder.mutation<Task, { title: string }>({
+    createTask: builder.mutation<Task, { title: string, description?: string }>({
       query(data) {
-        const { title } = data
+        const { title, description } = data
         return {
           url: "/tasks",
           method: 'POST',
-          body: { title }
+          body: { title, description }
         }
       },
       invalidatesTags: ['Task'],

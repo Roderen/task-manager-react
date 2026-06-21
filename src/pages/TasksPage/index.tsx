@@ -9,13 +9,13 @@ import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { useGetUserQuery } from "@/api/usersApi.ts";
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import CreateTaskPopup from '@/components/CreateTaskPopup';
 
 const TasksPage = () => {
   const [filter, setFilter] = useState<'uncompleted' | 'completed'>('uncompleted')
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, 300)
   const [showNewTask, setShowNewTask] = useState(false)
-  const [newTaskTitle, setNewTaskTitle] = useState('')
   const { data: currentUser } = useGetUserQuery()
 
   const [page, setPage] = useState<number>(1);
@@ -37,14 +37,10 @@ const TasksPage = () => {
     setPage(1)
   }, [debouncedSearch])
 
-  const handleSubmit = async (e: React.SyntheticEvent) => {
-    e.preventDefault();
-    const result = await createTask({ title: newTaskTitle });
-
+  const handleSubmit = async (title: string, description?: string) => {
+    const result = await createTask({ title, description })
     if ('data' in result) {
       toast.success('Task created')
-      setNewTaskTitle('')
-      setShowNewTask(false)
     } else {
       toast.error((result.error as { data?: { message?: string } }).data?.message ?? 'Something went wrong')
     }
@@ -90,20 +86,11 @@ const TasksPage = () => {
         </div>
 
         {showNewTask && (
-          <form className="flex flex-col min-[430px]:flex-row gap-2 min-[430px]:gap-3 mb-6" onSubmit={handleSubmit}>
-            <input
-              type="text"
-              value={newTaskTitle}
-              onChange={(e) => setNewTaskTitle(e.target.value)}
-              placeholder="Task title..."
-              className="flex-1 border rounded-lg px-4 py-2 text-sm sm:text-base"
-              required
-            />
-            <button type="submit" className="bg-black text-white px-4 py-2 rounded-lg text-sm sm:text-base">Add</button>
-            <button type="button" onClick={() => setShowNewTask(false)}
-              className="text-gray-500 px-4 py-1 text-sm sm:text-base">Cancel
-            </button>
-          </form>
+          <CreateTaskPopup
+            isOpen={showNewTask}
+            onClose={() => setShowNewTask(false)}
+            onSubmit={handleSubmit}
+          />
         )}
 
         <div className="flex flex-col gap-3">
@@ -119,6 +106,7 @@ const TasksPage = () => {
                 userId={task.userId}
                 currentUserId={currentUser?.id}
                 needsHelp={task.needsHelp}
+                description={task.description}
                 title={task.title}
                 completed={task.completed}
                 userEmail={task.user.email}
