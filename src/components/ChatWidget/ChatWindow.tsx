@@ -22,7 +22,9 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
   const [text, setText] = useState('')
   const { data: currentUser } = useGetUserQuery()
   const { data, isLoading, isFetching, hasNextPage, fetchNextPage } =
-    useGetMessagesInfiniteQuery(conversationId)
+    useGetMessagesInfiniteQuery(conversationId, {
+      refetchOnMountOrArgChange: true,
+    })
   const [sendMessage] = useSendMessageMutation()
   const [markAsRead] = useMarkAsReadMutation()
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -173,7 +175,7 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
           <div className="relative flex flex-col gap-2">
             {hasNextPage && <div ref={topRef} />}
             {allMessages.map((msg, i) => (
-              msg.deletedAt === null ? (
+              msg.deletedAt == null ? (
                 <div
                   key={msg.id ?? i}
                   className={`group relative min-w-[17%] max-w-[75%] px-3 py-3 rounded-2xl text-sm flex items-center gap-1 ${msg.senderId === currentUser?.id
@@ -182,7 +184,7 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
                     }`}
                 >
                   <span className="break-all">{msg.text}</span>
-                  {msg.editedAt !== null ? (
+                  {msg.editedAt != null ? (
                     <div className='absolute text-[8px] bottom-[2px] right-[10px]'>Edited</div>
                   ) : ''}
                   {msg.senderId === currentUser?.id && (

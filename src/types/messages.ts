@@ -16,6 +16,6 @@ export interface Message {
   senderId: number
   text: string
   createdAt: string
-  editedAt: string | null
-  deletedAt: string | null
+  editedAt?: string | null
+  deletedAt?: string | null
 }
