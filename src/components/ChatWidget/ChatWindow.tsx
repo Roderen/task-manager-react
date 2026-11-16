@@ -20,7 +20,6 @@ type Props = {
 
 const ChatWindow = ({ conversationId, onBack }: Props) => {
   const [text, setText] = useState('')
-  const [realtimeMessages, setRealtimeMessages] = useState<Message[]>([])
   const { data: currentUser } = useGetUserQuery()
   const { data, isLoading, isFetching, hasNextPage, fetchNextPage } =
     useGetMessagesInfiniteQuery(conversationId)
@@ -38,20 +37,11 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
 
   const handleEdit = async () => {
     if (!editingMessage) return
-    setRealtimeMessages(prev =>
-      prev.map(msg => msg.id === editingMessage.id
-        ? { ...msg, text: editingMessage.text, editedAt: new Date().toISOString() }
-        : msg
-      )
-    )
     await editMessage({ messageId: editingMessage.id, text: editingMessage.text })
     setEditingMessage(null)
   }
 
-  const allMessages = [
-    ...(data?.pages.slice().reverse().flatMap(page => page.messages) ?? []),
-    ...realtimeMessages
-  ]
+  const allMessages = data?.pages.slice().reverse().flatMap(page => page.messages) ?? []
 
   useEffect(() => {
     if (!isLoading) {
@@ -73,7 +63,13 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
     socket.emit('joinChat', { conversationId })
 
     function onNewMessage(message: Message) {
-      setRealtimeMessages(prev => [...prev, message])
+      if (message.conversationId !== conversationId) return
+      dispatch(messagesApi.util.updateQueryData('getMessages', conversationId, (draft) => {
+        const alreadyExists = draft.pages.some(page =>
+          page.messages.some(existing => existing.id === message.id)
+        )
+        if (!alreadyExists) draft.pages[0]?.messages.push(message)
+      }))
     }
 
     function onUserTyping() {
@@ -99,9 +95,6 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
           }
         })
       )
-      setRealtimeMessages(prev =>
-        prev.map(msg => msg.id === message.id ? message : msg)
-      )
     }
 
     socket.on('newMessage', onNewMessage)
@@ -116,14 +109,12 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
     }
   }, [conversationId, dispatch])
 
-  // Скролл вниз при первой загрузке
   useEffect(() => {
     if (!isLoading) {
       bottomRef.current?.scrollIntoView()
     }
   }, [isLoading])
 
-  // Observer для подгрузки старых сообщений
   useEffect(() => {
     if (isLoading) return
     const timer = setTimeout(() => {
@@ -158,7 +149,8 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
 
   const handleSend = async () => {
     if (!text.trim()) return
-    await sendMessage({ conversationId, text })
+    const result = await sendMessage({ conversationId, text })
+    if ('error' in result) return
     setText('')
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -200,7 +192,7 @@ const ChatWindow = ({ conversationId, onBack }: Props) => {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                         <DropdownMenuItem onClick={() => setEditingMessage({ id: msg.id, text: msg.text })}>
-                          Редактировать
+                          Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleDeleteMessage(msg.id)}

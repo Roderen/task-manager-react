@@ -45,6 +45,20 @@ export const messagesApi = createApi({
         method: 'POST',
         body,
       }),
+      async onQueryStarted({ conversationId }, { dispatch, queryFulfilled }) {
+        try {
+          const { data: message } = await queryFulfilled
+          dispatch(messagesApi.util.updateQueryData('getMessages', conversationId, (draft) => {
+            const alreadyExists = draft.pages.some(page =>
+              page.messages.some(existing => existing.id === message.id)
+            )
+            if (!alreadyExists) draft.pages[0]?.messages.push(message)
+          }))
+          dispatch(messagesApi.util.invalidateTags(['Conversations']))
+        } catch {
+          // Failed sends must not change the cached history.
+        }
+      },
     }),
     createConversation: builder.mutation<{ conversationId: number }, { receiverId: number }>({
       query: (body) => ({
